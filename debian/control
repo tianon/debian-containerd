@@ -1,0 +1,23 @@
+Source: containerd
+Section: admin
+Priority: optional
+Maintainer: Debian Go Packaging Team <pkg-go-maintainers@lists.alioth.debian.org>
+Uploaders: Tianon Gravi <tianon@debian.org>
+Build-Depends: debhelper (>= 9), dh-golang, golang-go
+Standards-Version: 3.9.6
+Homepage: https://containerd.tools
+Vcs-Git: git://anonscm.debian.org/pkg-go/packages/containerd.git
+Vcs-Browser: https://anonscm.debian.org/cgit/pkg-go/packages/containerd.git
+XS-Go-Import-Path: github.com/docker/containerd
+
+Package: containerd
+Architecture: linux-any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Built-Using: ${misc:Built-Using}
+Description: a daemon to control runC
+ Containerd is a daemon to control runC, built for performance and density.
+ Containerd leverages runC's advanced features such as seccomp and user
+ namespace support as well as checkpoint and restore for cloning and live
+ migration of containers.
+ .
+ This package contains the binaries.
