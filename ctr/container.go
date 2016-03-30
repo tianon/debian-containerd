@@ -17,8 +17,8 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/docker/containerd/api/grpc/types"
+	"github.com/docker/containerd/specs"
 	"github.com/docker/docker/pkg/term"
-	"github.com/opencontainers/specs"
 	netcontext "golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
@@ -48,8 +48,12 @@ var containersCommand = cli.Command{
 		execCommand,
 		killCommand,
 		listCommand,
+		pauseCommand,
+		resumeCommand,
 		startCommand,
 		statsCommand,
+		watchCommand,
+		updateCommand,
 	},
 	Action: listContainers,
 }
@@ -89,6 +93,7 @@ func listContainers(context *cli.Context) {
 	}
 	w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
 	fmt.Fprint(w, "ID\tPATH\tSTATUS\tPROCESSES\n")
+	sortContainers(resp.Containers)
 	for _, c := range resp.Containers {
 		procs := []string{}
 		for _, p := range c.Processes {
@@ -269,6 +274,84 @@ func attachStdio(s stdio) error {
 	return nil
 }
 
+var watchCommand = cli.Command{
+	Name:  "watch",
+	Usage: "print container events",
+	Action: func(context *cli.Context) {
+		c := getClient(context)
+		id := context.Args().First()
+		if id != "" {
+			resp, err := c.State(netcontext.Background(), &types.StateRequest{Id: id})
+			if err != nil {
+				fatal(err.Error(), 1)
+			}
+			for _, c := range resp.Containers {
+				if c.Id == id {
+					break
+				}
+			}
+			if id == "" {
+				fatal("Invalid container id", 1)
+			}
+		}
+		events, reqErr := c.Events(netcontext.Background(), &types.EventsRequest{})
+		if reqErr != nil {
+			fatal(reqErr.Error(), 1)
+		}
+
+		for {
+			e, err := events.Recv()
+			if err != nil {
+				fatal(err.Error(), 1)
+			}
+
+			if id == "" || e.Id == id {
+				fmt.Printf("%#v\n", e)
+			}
+		}
+	},
+}
+
+var pauseCommand = cli.Command{
+	Name:  "pause",
+	Usage: "pause a container",
+	Action: func(context *cli.Context) {
+		id := context.Args().First()
+		if id == "" {
+			fatal("container id cannot be empty", 1)
+		}
+		c := getClient(context)
+		_, err := c.UpdateContainer(netcontext.Background(), &types.UpdateContainerRequest{
+			Id:     id,
+			Pid:    "init",
+			Status: "paused",
+		})
+		if err != nil {
+			fatal(err.Error(), 1)
+		}
+	},
+}
+
+var resumeCommand = cli.Command{
+	Name:  "resume",
+	Usage: "resume a paused container",
+	Action: func(context *cli.Context) {
+		id := context.Args().First()
+		if id == "" {
+			fatal("container id cannot be empty", 1)
+		}
+		c := getClient(context)
+		_, err := c.UpdateContainer(netcontext.Background(), &types.UpdateContainerRequest{
+			Id:     id,
+			Pid:    "init",
+			Status: "running",
+		})
+		if err != nil {
+			fatal(err.Error(), 1)
+		}
+	},
+}
+
 var killCommand = cli.Command{
 	Name:  "kill",
 	Usage: "send a signal to a container or its processes",
@@ -435,6 +518,59 @@ var statsCommand = cli.Command{
 	},
 }
 
+var updateCommand = cli.Command{
+	Name:  "update",
+	Usage: "update a containers resources",
+	Flags: []cli.Flag{
+		cli.IntFlag{
+			Name: "memory-limit",
+		},
+		cli.IntFlag{
+			Name: "memory-reservation",
+		},
+		cli.IntFlag{
+			Name: "memory-swap",
+		},
+		cli.IntFlag{
+			Name: "cpu-quota",
+		},
+		cli.IntFlag{
+			Name: "cpu-period",
+		},
+		cli.IntFlag{
+			Name: "kernel-limit",
+		},
+		cli.IntFlag{
+			Name: "blkio-weight",
+		},
+		cli.StringFlag{
+			Name: "cpuset-cpus",
+		},
+		cli.StringFlag{
+			Name: "cpuset-mems",
+		},
+	},
+	Action: func(context *cli.Context) {
+		req := &types.UpdateContainerRequest{
+			Id: context.Args().First(),
+		}
+		req.Resources = &types.UpdateResource{}
+		req.Resources.MemoryLimit = uint32(context.Int("memory-limit"))
+		req.Resources.MemoryReservation = uint32(context.Int("memory-reservation"))
+		req.Resources.MemorySwap = uint32(context.Int("memory-swap"))
+		req.Resources.BlkioWeight = uint32(context.Int("blkio-weight"))
+		req.Resources.CpuPeriod = uint32(context.Int("cpu-period"))
+		req.Resources.CpuQuota = uint32(context.Int("cpu-quota"))
+		req.Resources.CpuShares = uint32(context.Int("cpu-shares"))
+		req.Resources.CpusetCpus = context.String("cpuset-cpus")
+		req.Resources.CpusetMems = context.String("cpuset-mems")
+		c := getClient(context)
+		if _, err := c.UpdateContainer(netcontext.Background(), req); err != nil {
+			fatal(err.Error(), 1)
+		}
+	},
+}
+
 func waitForExit(c types.APIClient, events types.API_EventsClient, id, pid string, closer func()) error {
 	for {
 		e, err := events.Recv()
@@ -455,24 +591,4 @@ type stdio struct {
 	stdin  string
 	stdout string
 	stderr string
-}
-
-func createStdio() (s stdio, err error) {
-	tmp, err := ioutil.TempDir("", "ctr-")
-	if err != nil {
-		return s, err
-	}
-	// create fifo's for the process
-	for name, fd := range map[string]*string{
-		"stdin":  &s.stdin,
-		"stdout": &s.stdout,
-		"stderr": &s.stderr,
-	} {
-		path := filepath.Join(tmp, name)
-		if err := syscall.Mkfifo(path, 0755); err != nil && !os.IsExist(err) {
-			return s, err
-		}
-		*fd = path
-	}
-	return s, nil
 }

@@ -8,29 +8,35 @@ import (
 )
 
 type DeleteTask struct {
-	s *Supervisor
+	baseTask
+	ID      string
+	Status  int
+	PID     string
+	NoEvent bool
 }
 
-func (h *DeleteTask) Handle(e *Task) error {
-	if i, ok := h.s.containers[e.ID]; ok {
+func (s *Supervisor) delete(t *DeleteTask) error {
+	if i, ok := s.containers[t.ID]; ok {
 		start := time.Now()
-		if err := h.deleteContainer(i.container); err != nil {
+		if err := s.deleteContainer(i.container); err != nil {
 			logrus.WithField("error", err).Error("containerd: deleting container")
 		}
-		h.s.notifySubscribers(Event{
-			Type:      "exit",
-			Timestamp: time.Now(),
-			ID:        e.ID,
-			Status:    e.Status,
-			Pid:       e.Pid,
-		})
+		if !t.NoEvent {
+			s.notifySubscribers(Event{
+				Type:      "exit",
+				Timestamp: time.Now(),
+				ID:        t.ID,
+				Status:    t.Status,
+				PID:       t.PID,
+			})
+		}
 		ContainersCounter.Dec(1)
 		ContainerDeleteTimer.UpdateSince(start)
 	}
 	return nil
 }
 
-func (h *DeleteTask) deleteContainer(container runtime.Container) error {
-	delete(h.s.containers, container.ID())
+func (s *Supervisor) deleteContainer(container runtime.Container) error {
+	delete(s.containers, container.ID())
 	return container.Delete()
 }

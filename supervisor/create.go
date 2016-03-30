@@ -7,31 +7,38 @@ import (
 )
 
 type StartTask struct {
-	s *Supervisor
+	baseTask
+	platformStartTask
+	ID            string
+	BundlePath    string
+	Stdout        string
+	Stderr        string
+	Stdin         string
+	StartResponse chan StartResponse
+	Labels        []string
 }
 
-func (h *StartTask) Handle(e *Task) error {
+func (s *Supervisor) start(t *StartTask) error {
 	start := time.Now()
-	container, err := runtime.New(h.s.stateDir, e.ID, e.BundlePath, e.Labels)
+	container, err := runtime.New(s.stateDir, t.ID, t.BundlePath, s.runtime, t.Labels)
 	if err != nil {
 		return err
 	}
-	h.s.containers[e.ID] = &containerInfo{
+	s.containers[t.ID] = &containerInfo{
 		container: container,
 	}
 	ContainersCounter.Inc(1)
 	task := &startTask{
-		Err:           e.Err,
+		Err:           t.ErrorCh(),
 		Container:     container,
-		StartResponse: e.StartResponse,
-		Stdin:         e.Stdin,
-		Stdout:        e.Stdout,
-		Stderr:        e.Stderr,
+		StartResponse: t.StartResponse,
+		Stdin:         t.Stdin,
+		Stdout:        t.Stdout,
+		Stderr:        t.Stderr,
 	}
-	if e.Checkpoint != nil {
-		task.Checkpoint = e.Checkpoint.Name
-	}
-	h.s.tasks <- task
+	task.setTaskCheckpoint(t)
+
+	s.startTasks <- task
 	ContainerCreateTimer.UpdateSince(start)
 	return errDeferedResponse
 }

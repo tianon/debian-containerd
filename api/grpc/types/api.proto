@@ -17,7 +17,7 @@ service API {
 }
 
 message UpdateProcessRequest {
-    string id = 1; 
+    string id = 1;
     string pid = 2;
     bool closeStdin = 3; // Close stdin of the container
     uint32 width = 4;
@@ -57,10 +57,21 @@ message AddProcessRequest {
 	repeated string args = 4; // Arguments for process, first is binary path itself
 	repeated string env = 5; // List of environment variables for process
 	string cwd = 6; // Workind directory of process
-    string pid = 7; // Process ID 
+    string pid = 7; // Process ID
     string stdin = 8; // path to the file where stdin will be read (optional)
 	string stdout = 9; // path to file where stdout will be written (optional)
 	string stderr = 10; // path to file where stderr will be written (optional)
+    repeated string capabilities = 11;
+    string apparmorProfile = 12;
+    string selinuxLabel = 13;
+    bool noNewPrivileges = 14;
+    repeated Rlimit rlimits = 15;
+}
+
+message Rlimit {
+    string type = 1;
+    uint64 soft = 2;
+    uint64 hard = 3;
 }
 
 message User {
@@ -123,6 +134,11 @@ message Process {
     string stdin = 8; // path to the file where stdin will be read (optional)
 	string stdout = 9; // path to file where stdout will be written (optional)
 	string stderr = 10; // path to file where stderr will be written (optional)
+repeated string capabilities = 11;
+    string apparmorProfile = 12;
+    string selinuxLabel = 13;
+    bool noNewPrivileges = 14;
+    repeated Rlimit rlimits = 15;
 }
 
 message Container {
@@ -132,6 +148,7 @@ message Container {
 	string status = 4; // Container status ("running", "paused", etc.)
     repeated string labels = 5;
     repeated uint32 pids = 6;
+    string runtime = 7; // runtime used to execute the container
 }
 
 // Machine is information about machine on which containerd is run
@@ -150,6 +167,20 @@ message UpdateContainerRequest {
 	string id = 1; // ID of container
     string pid = 2;
 	string status = 3; // Status to whcih containerd will try to change
+    UpdateResource resources =4;
+}
+
+message UpdateResource {
+    uint32 blkioWeight =1;
+    uint32 cpuShares = 2;
+    uint32 cpuPeriod = 3;
+    uint32 cpuQuota = 4;
+    string cpusetCpus = 5;
+    string cpusetMems = 6;
+    uint32 memoryLimit = 7;
+    uint32 memorySwap = 8;
+    uint32 memoryReservation = 9;
+    uint32 kernelMemoryLimit = 10;
 }
 
 message UpdateContainerResponse {
@@ -195,12 +226,18 @@ message ThrottlingData {
 message CpuStats {
 	CpuUsage cpu_usage = 1;
 	ThrottlingData throttling_data = 2;
+	uint64 system_usage = 3;
+}
+
+message PidsStats {
+	uint64 current = 1;
 }
 
 message MemoryData {
 	uint64 usage = 1;
 	uint64 max_usage = 2;
 	uint64 failcnt = 3;
+	uint64 limit = 4;
 }
 
 message MemoryStats {
@@ -233,6 +270,7 @@ message HugetlbStats {
 	uint64 usage = 1;
 	uint64 max_usage = 2;
 	uint64 failcnt = 3;
+	uint64 limit = 4;
 }
 
 message CgroupStats {
@@ -240,6 +278,7 @@ message CgroupStats {
 	MemoryStats memory_stats  = 2;
 	BlkioStats blkio_stats = 3;
 	map<string, HugetlbStats> hugetlb_stats = 4; // the map is in the format "size of hugepage: stats of the hugepage"
+	PidsStats pids_stats = 5;
 }
 
 message StatsResponse {
