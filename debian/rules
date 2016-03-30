@@ -1,7 +1,9 @@
 #!/usr/bin/make -f
 
-override_dh_auto_build:
-	make
+export DH_GOLANG_BUILDPKG := \
+	github.com/docker/containerd/ctr \
+	github.com/docker/containerd/containerd \
+	github.com/docker/containerd/containerd-shim
 
 %:
 	dh $@ --buildsystem=golang --with=golang
