@@ -1,4 +1,4 @@
-containerd (0.0.5~ds1-1) UNRELEASED; urgency=medium
+containerd (0.1.0~ds1-1) UNRELEASED; urgency=medium
 
   * Initial release (Closes: #819520)
 
