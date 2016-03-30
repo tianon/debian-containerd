@@ -1,11 +1,10 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
-	"runtime"
 	"sync"
 	"syscall"
 	"time"
@@ -13,15 +12,12 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/cloudfoundry/gosigar"
 	"github.com/codegangsta/cli"
-	"github.com/cyberdelia/go-metrics-graphite"
 	"github.com/docker/containerd"
 	"github.com/docker/containerd/api/grpc/server"
 	"github.com/docker/containerd/api/grpc/types"
+	"github.com/docker/containerd/osutils"
 	"github.com/docker/containerd/supervisor"
-	"github.com/docker/containerd/util"
-	"github.com/rcrowley/go-metrics"
 )
 
 const (
@@ -36,53 +32,45 @@ var daemonFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  "state-dir",
-		Value: "/run/containerd",
+		Value: defaultStateDir,
 		Usage: "runtime state directory",
 	},
 	cli.DurationFlag{
 		Name:  "metrics-interval",
-		Value: 120 * time.Second,
+		Value: 5 * time.Minute,
 		Usage: "interval for flushing metrics to the store",
 	},
 	cli.StringFlag{
 		Name:  "listen,l",
-		Value: "/run/containerd/containerd.sock",
+		Value: defaultGRPCEndpoint,
 		Usage: "Address on which GRPC API will listen",
 	},
-	cli.BoolFlag{
-		Name:  "oom-notify",
-		Usage: "enable oom notifications for containers",
-	},
 	cli.StringFlag{
-		Name:  "graphite-address",
-		Usage: "Address of graphite server",
+		Name:  "runtime,r",
+		Value: "runc",
+		Usage: "name of the OCI compliant runtime to use when executing containers",
 	},
 }
 
 func main() {
+	appendPlatformFlags()
 	app := cli.NewApp()
 	app.Name = "containerd"
-	app.Version = containerd.Version
+	if containerd.GitCommit != "" {
+		app.Version = fmt.Sprintf("%s commit: %s", containerd.Version, containerd.GitCommit)
+	} else {
+		app.Version = containerd.Version
+	}
 	app.Usage = usage
 	app.Flags = daemonFlags
-	app.Before = func(context *cli.Context) error {
-		if context.GlobalBool("debug") {
-			logrus.SetLevel(logrus.DebugLevel)
-			if err := debugMetrics(context.GlobalDuration("metrics-interval"), context.GlobalString("graphite-address")); err != nil {
-				return err
-			}
-		}
-		if err := checkLimits(); err != nil {
-			return err
-		}
-		return nil
-	}
+	setAppBefore(app)
+
 	app.Action = func(context *cli.Context) {
 		if err := daemon(
 			context.String("listen"),
 			context.String("state-dir"),
 			10,
-			context.Bool("oom-notify"),
+			context.String("runtime"),
 		); err != nil {
 			logrus.Fatal(err)
 		}
@@ -92,80 +80,15 @@ func main() {
 	}
 }
 
-func checkLimits() error {
-	var l syscall.Rlimit
-	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &l); err != nil {
-		return err
-	}
-	if l.Cur <= minRlimit {
-		logrus.WithFields(logrus.Fields{
-			"current": l.Cur,
-			"max":     l.Max,
-		}).Warn("containerd: low RLIMIT_NOFILE changing to max")
-		l.Cur = l.Max
-		return syscall.Setrlimit(syscall.RLIMIT_NOFILE, &l)
-	}
-	return nil
-}
-
-func debugMetrics(interval time.Duration, graphiteAddr string) error {
-	for name, m := range supervisor.Metrics() {
-		if err := metrics.DefaultRegistry.Register(name, m); err != nil {
-			return err
-		}
-	}
-	processMetrics()
-	if graphiteAddr != "" {
-		addr, err := net.ResolveTCPAddr("tcp", graphiteAddr)
-		if err != nil {
-			return err
-		}
-		go graphite.Graphite(metrics.DefaultRegistry, 10e9, "metrics", addr)
-	} else {
-		l := log.New(os.Stdout, "[containerd] ", log.LstdFlags)
-		go metrics.Log(metrics.DefaultRegistry, interval, l)
-	}
-	return nil
-}
-
-func processMetrics() {
-	var (
-		g    = metrics.NewGauge()
-		fg   = metrics.NewGauge()
-		memg = metrics.NewGauge()
-	)
-	metrics.DefaultRegistry.Register("goroutines", g)
-	metrics.DefaultRegistry.Register("fds", fg)
-	metrics.DefaultRegistry.Register("memory-used", memg)
-	collect := func() {
-		// update number of goroutines
-		g.Update(int64(runtime.NumGoroutine()))
-		// collect the number of open fds
-		fds, err := util.GetOpenFds(os.Getpid())
-		if err != nil {
-			logrus.WithField("error", err).Error("containerd: get open fd count")
-		}
-		fg.Update(int64(fds))
-		// get the memory used
-		m := sigar.ProcMem{}
-		if err := m.Get(os.Getpid()); err != nil {
-			logrus.WithField("error", err).Error("containerd: get pid memory information")
-		}
-		memg.Update(int64(m.Size))
-	}
-	go func() {
-		collect()
-		for range time.Tick(30 * time.Second) {
-			collect()
-		}
-	}()
-}
-
-func daemon(address, stateDir string, concurrency int, oom bool) error {
+func daemon(address, stateDir string, concurrency int, runtimeName string) error {
 	// setup a standard reaper so that we don't leave any zombies if we are still alive
 	// this is just good practice because we are spawning new processes
-	go reapProcesses()
-	sv, err := supervisor.New(stateDir, oom)
+	s := make(chan os.Signal, 2048)
+	signal.Notify(s, syscall.SIGCHLD, syscall.SIGTERM, syscall.SIGINT)
+	if err := osutils.SetSubreaper(1); err != nil {
+		logrus.WithField("error", err).Error("containerd: set subpreaper")
+	}
+	sv, err := supervisor.New(stateDir, runtimeName)
 	if err != nil {
 		return err
 	}
@@ -178,30 +101,41 @@ func daemon(address, stateDir string, concurrency int, oom bool) error {
 	if err := sv.Start(); err != nil {
 		return err
 	}
-	if err := os.RemoveAll(address); err != nil {
-		return err
-	}
-	l, err := net.Listen("unix", address)
+	server, err := startServer(address, sv)
 	if err != nil {
 		return err
 	}
-	s := grpc.NewServer()
-	types.RegisterAPIServer(s, server.NewServer(sv))
-	logrus.Debugf("containerd: grpc api on %s", address)
-	return s.Serve(l)
-}
-
-func reapProcesses() {
-	s := make(chan os.Signal, 2048)
-	signal.Notify(s, syscall.SIGCHLD)
-	if err := util.SetSubreaper(1); err != nil {
-		logrus.WithField("error", err).Error("containerd: set subpreaper")
-	}
-	for range s {
-		if _, err := util.Reap(); err != nil {
-			logrus.WithField("error", err).Error("containerd: reap child processes")
+	for ss := range s {
+		switch ss {
+		case syscall.SIGCHLD:
+			if _, err := osutils.Reap(); err != nil {
+				logrus.WithField("error", err).Warn("containerd: reap child processes")
+			}
+		default:
+			server.Stop()
+			os.Exit(0)
 		}
 	}
+	return nil
+}
+
+func startServer(address string, sv *supervisor.Supervisor) (*grpc.Server, error) {
+	if err := os.RemoveAll(address); err != nil {
+		return nil, err
+	}
+	l, err := net.Listen(defaultListenType, address)
+	if err != nil {
+		return nil, err
+	}
+	s := grpc.NewServer()
+	types.RegisterAPIServer(s, server.NewServer(sv))
+	go func() {
+		logrus.Debugf("containerd: grpc api on %s", address)
+		if err := s.Serve(l); err != nil {
+			logrus.WithField("error", err).Fatal("containerd: serve grpc")
+		}
+	}()
+	return s, nil
 }
 
 // getDefaultID returns the hostname for the instance host

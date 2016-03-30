@@ -2,16 +2,14 @@ package runtime
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"syscall"
-	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/opencontainers/runc/libcontainer"
-	"github.com/opencontainers/specs"
+	"github.com/docker/containerd/specs"
 )
 
 type Container interface {
@@ -22,7 +20,7 @@ type Container interface {
 	// Start starts the init process of the container
 	Start(checkpoint string, s Stdio) (Process, error)
 	// Exec starts another process in an existing container
-	Exec(string, specs.Process, Stdio) (Process, error)
+	Exec(string, specs.ProcessSpec, Stdio) (Process, error)
 	// Delete removes the container's state and any resources
 	Delete() error
 	// Processes returns all the containers processes that have been added
@@ -47,8 +45,20 @@ type Container interface {
 	Pids() ([]int, error)
 	// Stats returns realtime container stats and resource information
 	Stats() (*Stat, error)
+	// Name or path of the OCI compliant runtime used to execute the container
+	Runtime() string
 	// OOM signals the channel if the container received an OOM notification
-	// OOM() (<-chan struct{}, error)
+	OOM() (OOM, error)
+	// UpdateResource updates the containers resources to new values
+	UpdateResources(*Resource) error
+}
+
+type OOM interface {
+	io.Closer
+	FD() int
+	ContainerID() string
+	Flush()
+	Removed() bool
 }
 
 type Stdio struct {
@@ -73,13 +83,14 @@ func NewStdio(stdin, stdout, stderr string) Stdio {
 }
 
 // New returns a new container
-func New(root, id, bundle string, labels []string) (Container, error) {
+func New(root, id, bundle, runtimeName string, labels []string) (Container, error) {
 	c := &container{
 		root:      root,
 		id:        id,
 		bundle:    bundle,
 		labels:    labels,
 		processes: make(map[string]*process),
+		runtime:   runtimeName,
 	}
 	if err := os.Mkdir(filepath.Join(root, id), 0755); err != nil {
 		return nil, err
@@ -90,8 +101,9 @@ func New(root, id, bundle string, labels []string) (Container, error) {
 	}
 	defer f.Close()
 	if err := json.NewEncoder(f).Encode(state{
-		Bundle: bundle,
-		Labels: labels,
+		Bundle:  bundle,
+		Labels:  labels,
+		Runtime: runtimeName,
 	}); err != nil {
 		return nil, err
 	}
@@ -113,6 +125,7 @@ func Load(root, id string) (Container, error) {
 		id:        id,
 		bundle:    s.Bundle,
 		labels:    s.Labels,
+		runtime:   s.Runtime,
 		processes: make(map[string]*process),
 	}
 	dirs, err := ioutil.ReadDir(filepath.Join(root, id))
@@ -156,9 +169,10 @@ type container struct {
 	root      string
 	id        string
 	bundle    string
+	runtime   string
 	processes map[string]*process
-	stdio     Stdio
 	labels    []string
+	oomFds    []int
 }
 
 func (c *container) ID() string {
@@ -173,81 +187,8 @@ func (c *container) Labels() []string {
 	return c.labels
 }
 
-func (c *container) Start(checkpoint string, s Stdio) (Process, error) {
-	processRoot := filepath.Join(c.root, c.id, InitProcessID)
-	if err := os.Mkdir(processRoot, 0755); err != nil {
-		return nil, err
-	}
-	cmd := exec.Command("containerd-shim",
-		c.id, c.bundle,
-	)
-	cmd.Dir = processRoot
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
-	spec, err := c.readSpec()
-	if err != nil {
-		return nil, err
-	}
-	config := &processConfig{
-		checkpoint:  checkpoint,
-		root:        processRoot,
-		id:          InitProcessID,
-		c:           c,
-		stdio:       s,
-		spec:        spec,
-		processSpec: spec.Process,
-	}
-	p, err := newProcess(config)
-	if err != nil {
-		return nil, err
-	}
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-	if _, err := p.getPid(); err != nil {
-		return p, nil
-	}
-	c.processes[InitProcessID] = p
-	return p, nil
-}
-
-func (c *container) Exec(pid string, spec specs.Process, s Stdio) (Process, error) {
-	processRoot := filepath.Join(c.root, c.id, pid)
-	if err := os.Mkdir(processRoot, 0755); err != nil {
-		return nil, err
-	}
-	cmd := exec.Command("containerd-shim",
-		c.id, c.bundle,
-	)
-	cmd.Dir = processRoot
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
-	config := &processConfig{
-		exec:        true,
-		id:          pid,
-		root:        processRoot,
-		c:           c,
-		processSpec: spec,
-		stdio:       s,
-	}
-	p, err := newProcess(config)
-	if err != nil {
-		return nil, err
-	}
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-	if _, err := p.getPid(); err != nil {
-		return p, nil
-	}
-	c.processes[pid] = p
-	return p, nil
-}
-
-func (c *container) readSpec() (*specs.LinuxSpec, error) {
-	var spec specs.LinuxSpec
+func (c *container) readSpec() (*specs.Spec, error) {
+	var spec specs.Spec
 	f, err := os.Open(filepath.Join(c.bundle, "config.json"))
 	if err != nil {
 		return nil, err
@@ -259,20 +200,10 @@ func (c *container) readSpec() (*specs.LinuxSpec, error) {
 	return &spec, nil
 }
 
-func (c *container) Pause() error {
-	return exec.Command("runc", "pause", c.id).Run()
-}
-
-func (c *container) Resume() error {
-	return exec.Command("runc", "resume", c.id).Run()
-}
-
-func (c *container) State() State {
-	return Running
-}
-
 func (c *container) Delete() error {
-	return os.RemoveAll(filepath.Join(c.root, c.id))
+	err := os.RemoveAll(filepath.Join(c.root, c.id))
+	exec.Command(c.runtime, "delete", c.id).Run()
+	return err
 }
 
 func (c *container) Processes() ([]Process, error) {
@@ -288,131 +219,21 @@ func (c *container) RemoveProcess(pid string) error {
 	return os.RemoveAll(filepath.Join(c.root, c.id, pid))
 }
 
-func (c *container) Checkpoints() ([]Checkpoint, error) {
-	dirs, err := ioutil.ReadDir(filepath.Join(c.bundle, "checkpoints"))
-	if err != nil {
-		return nil, err
-	}
-	var out []Checkpoint
-	for _, d := range dirs {
-		if !d.IsDir() {
-			continue
-		}
-		path := filepath.Join(c.bundle, "checkpoints", d.Name(), "config.json")
-		data, err := ioutil.ReadFile(path)
-		if err != nil {
-			return nil, err
-		}
-		var cpt Checkpoint
-		if err := json.Unmarshal(data, &cpt); err != nil {
-			return nil, err
-		}
-		out = append(out, cpt)
-	}
-	return out, nil
-}
-
-func (c *container) Checkpoint(cpt Checkpoint) error {
-	if err := os.MkdirAll(filepath.Join(c.bundle, "checkpoints"), 0755); err != nil {
-		return err
-	}
-	path := filepath.Join(c.bundle, "checkpoints", cpt.Name)
-	if err := os.Mkdir(path, 0755); err != nil {
-		return err
-	}
-	f, err := os.Create(filepath.Join(path, "config.json"))
-	if err != nil {
-		return err
-	}
-	cpt.Created = time.Now()
-	err = json.NewEncoder(f).Encode(cpt)
-	f.Close()
-	if err != nil {
-		return err
-	}
-	args := []string{
-		"checkpoint",
-		"--image-path", path,
-	}
-	add := func(flags ...string) {
-		args = append(args, flags...)
-	}
-	if !cpt.Exit {
-		add("--leave-running")
-	}
-	if cpt.Shell {
-		add("--shell-job")
-	}
-	if cpt.Tcp {
-		add("--tcp-established")
-	}
-	if cpt.UnixSockets {
-		add("--ext-unix-sk")
-	}
-	add(c.id)
-	return exec.Command("runc", args...).Run()
-}
-
-func (c *container) DeleteCheckpoint(name string) error {
-	return os.RemoveAll(filepath.Join(c.bundle, "checkpoints", name))
-}
-
-func (c *container) Pids() ([]int, error) {
+func (c *container) UpdateResources(r *Resource) error {
 	container, err := c.getLibctContainer()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return container.Processes()
-}
-
-func (c *container) Stats() (*Stat, error) {
-	container, err := c.getLibctContainer()
-	if err != nil {
-		return nil, err
-	}
-	now := time.Now()
-	stats, err := container.Stats()
-	if err != nil {
-		return nil, err
-	}
-	return &Stat{
-		Timestamp: now,
-		Data:      stats,
-	}, nil
-}
-
-func (c *container) getLibctContainer() (libcontainer.Container, error) {
-	f, err := libcontainer.New(specs.LinuxStateDirectory, libcontainer.Cgroupfs)
-	if err != nil {
-		return nil, err
-	}
-	return f.Load(c.id)
-}
-
-func getRootIDs(s *specs.LinuxSpec) (int, int, error) {
-	if s == nil {
-		return 0, 0, nil
-	}
-	var hasUserns bool
-	for _, ns := range s.Linux.Namespaces {
-		if ns.Type == specs.UserNamespace {
-			hasUserns = true
-			break
-		}
-	}
-	if !hasUserns {
-		return 0, 0, nil
-	}
-	uid := hostIDFromMap(0, s.Linux.UIDMappings)
-	gid := hostIDFromMap(0, s.Linux.GIDMappings)
-	return uid, gid, nil
-}
-
-func hostIDFromMap(id uint32, mp []specs.IDMapping) int {
-	for _, m := range mp {
-		if (id >= m.ContainerID) && (id <= (m.ContainerID + m.Size - 1)) {
-			return int(m.HostID + (id - m.ContainerID))
-		}
-	}
-	return 0
+	config := container.Config()
+	config.Cgroups.Resources.CpuShares = r.CPUShares
+	config.Cgroups.Resources.BlkioWeight = r.BlkioWeight
+	config.Cgroups.Resources.CpuPeriod = r.CPUPeriod
+	config.Cgroups.Resources.CpuQuota = r.CPUQuota
+	config.Cgroups.Resources.CpusetCpus = r.CpusetCpus
+	config.Cgroups.Resources.CpusetMems = r.CpusetMems
+	config.Cgroups.Resources.KernelMemory = r.KernelMemory
+	config.Cgroups.Resources.Memory = r.Memory
+	config.Cgroups.Resources.MemoryReservation = r.MemoryReservation
+	config.Cgroups.Resources.MemorySwap = r.MemorySwap
+	return container.Set(config)
 }

@@ -9,9 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"syscall"
-	"time"
 
-	"github.com/opencontainers/specs"
+	"github.com/docker/containerd/specs"
 )
 
 type Process interface {
@@ -29,7 +28,7 @@ type Process interface {
 	// has not exited
 	ExitStatus() (int, error)
 	// Spec returns the process spec that created the process
-	Spec() specs.Process
+	Spec() specs.ProcessSpec
 	// Signal sends the provided signal to the process
 	Signal(os.Signal) error
 	// Container returns the container that the process belongs to
@@ -38,13 +37,15 @@ type Process interface {
 	Stdio() Stdio
 	// SystemPid is the pid on the system
 	SystemPid() int
+	// State returns if the process is running or not
+	State() State
 }
 
 type processConfig struct {
 	id          string
 	root        string
-	processSpec specs.Process
-	spec        *specs.LinuxSpec
+	processSpec specs.ProcessSpec
+	spec        *specs.Spec
 	c           *container
 	stdio       Stdio
 	exec        bool
@@ -68,16 +69,9 @@ func newProcess(config *processConfig) (*process, error) {
 		return nil, err
 	}
 	defer f.Close()
-	if err := json.NewEncoder(f).Encode(ProcessState{
-		Process:    config.processSpec,
-		Exec:       config.exec,
-		Checkpoint: config.checkpoint,
-		RootUID:    uid,
-		RootGID:    gid,
-		Stdin:      config.stdio.Stdin,
-		Stdout:     config.stdio.Stdout,
-		Stderr:     config.stdio.Stderr,
-	}); err != nil {
+
+	ps := populateProcessStateForEncoding(config, uid, gid)
+	if err := json.NewEncoder(f).Encode(ps); err != nil {
 		return nil, err
 	}
 	exit, err := getExitPipe(filepath.Join(config.root, ExitFile))
@@ -98,14 +92,14 @@ func loadProcess(root, id string, c *container, s *ProcessState) (*process, erro
 		root:      root,
 		id:        id,
 		container: c,
-		spec:      s.Process,
+		spec:      s.ProcessSpec,
 		stdio: Stdio{
 			Stdin:  s.Stdin,
 			Stdout: s.Stdout,
 			Stderr: s.Stderr,
 		},
 	}
-	if _, err := p.getPid(); err != nil {
+	if _, err := p.getPidFromFile(); err != nil {
 		return nil, err
 	}
 	if _, err := p.ExitStatus(); err != nil {
@@ -122,22 +116,6 @@ func loadProcess(root, id string, c *container, s *ProcessState) (*process, erro
 	return p, nil
 }
 
-func getExitPipe(path string) (*os.File, error) {
-	if err := syscall.Mkfifo(path, 0755); err != nil && !os.IsExist(err) {
-		return nil, err
-	}
-	// add NONBLOCK in case the other side has already closed or else
-	// this function would never return
-	return os.OpenFile(path, syscall.O_RDONLY|syscall.O_NONBLOCK, 0)
-}
-
-func getControlPipe(path string) (*os.File, error) {
-	if err := syscall.Mkfifo(path, 0755); err != nil && !os.IsExist(err) {
-		return nil, err
-	}
-	return os.OpenFile(path, syscall.O_RDWR|syscall.O_NONBLOCK, 0)
-}
-
 type process struct {
 	root        string
 	id          string
@@ -145,7 +123,7 @@ type process struct {
 	exitPipe    *os.File
 	controlPipe *os.File
 	container   *container
-	spec        specs.Process
+	spec        specs.ProcessSpec
 	stdio       Stdio
 }
 
@@ -190,12 +168,7 @@ func (p *process) ExitStatus() (int, error) {
 	return strconv.Atoi(string(data))
 }
 
-// Signal sends the provided signal to the process
-func (p *process) Signal(s os.Signal) error {
-	return syscall.Kill(p.pid, s.(syscall.Signal))
-}
-
-func (p *process) Spec() specs.Process {
+func (p *process) Spec() specs.ProcessSpec {
 	return p.spec
 }
 
@@ -208,22 +181,26 @@ func (p *process) Close() error {
 	return p.exitPipe.Close()
 }
 
-func (p *process) getPid() (int, error) {
-	for i := 0; i < 20; i++ {
-		data, err := ioutil.ReadFile(filepath.Join(p.root, "pid"))
-		if err != nil {
-			if os.IsNotExist(err) {
-				time.Sleep(100 * time.Millisecond)
-				continue
-			}
-			return -1, err
-		}
-		i, err := strconv.Atoi(string(data))
-		if err != nil {
-			return -1, err
-		}
-		p.pid = i
-		return i, nil
+func (p *process) State() State {
+	if p.pid == 0 {
+		return Stopped
 	}
-	return -1, fmt.Errorf("containerd: cannot read pid file")
+	err := syscall.Kill(p.pid, 0)
+	if err != nil && err == syscall.ESRCH {
+		return Stopped
+	}
+	return Running
+}
+
+func (p *process) getPidFromFile() (int, error) {
+	data, err := ioutil.ReadFile(filepath.Join(p.root, "pid"))
+	if err != nil {
+		return -1, err
+	}
+	i, err := strconv.Atoi(string(data))
+	if err != nil {
+		return -1, errInvalidPidInt
+	}
+	p.pid = i
+	return i, nil
 }

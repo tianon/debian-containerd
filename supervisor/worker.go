@@ -36,26 +36,25 @@ type worker struct {
 
 func (w *worker) Start() {
 	defer w.wg.Done()
-	for t := range w.s.tasks {
+	for t := range w.s.startTasks {
 		started := time.Now()
 		process, err := t.Container.Start(t.Checkpoint, runtime.NewStdio(t.Stdin, t.Stdout, t.Stderr))
 		if err != nil {
-			evt := NewTask(DeleteTaskType)
-			evt.ID = t.Container.ID()
-			w.s.SendTask(evt)
+			logrus.WithFields(logrus.Fields{
+				"error": err,
+				"id":    t.Container.ID(),
+			}).Error("containerd: start container")
 			t.Err <- err
+			evt := &DeleteTask{
+				ID:      t.Container.ID(),
+				NoEvent: true,
+			}
+			w.s.SendTask(evt)
 			continue
 		}
-		/*
-		   if w.s.notifier != nil {
-		       n, err := t.Container.OOM()
-		       if err != nil {
-		           logrus.WithField("error", err).Error("containerd: notify OOM events")
-		       } else {
-		           w.s.notifier.Add(n, t.Container.ID())
-		       }
-		   }
-		*/
+		if err := w.s.monitor.MonitorOOM(t.Container); err != nil && err != runtime.ErrContainerExited {
+			logrus.WithField("error", err).Error("containerd: notify OOM events")
+		}
 		if err := w.s.monitorProcess(process); err != nil {
 			logrus.WithField("error", err).Error("containerd: add process to monitor")
 		}

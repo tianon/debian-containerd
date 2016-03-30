@@ -2,19 +2,25 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"syscall"
 
 	"github.com/docker/containerd/runtime"
 	"github.com/opencontainers/runc/libcontainer"
 )
 
+var errRuntime = errors.New("shim: runtime execution error")
+
 type process struct {
+	sync.WaitGroup
 	id           string
 	bundle       string
 	stdio        *stdio
@@ -25,12 +31,14 @@ type process struct {
 	console      libcontainer.Console
 	consolePath  string
 	state        *runtime.ProcessState
+	runtime      string
 }
 
-func newProcess(id, bundle string) (*process, error) {
+func newProcess(id, bundle, runtimeName string) (*process, error) {
 	p := &process{
-		id:     id,
-		bundle: bundle,
+		id:      id,
+		bundle:  bundle,
+		runtime: runtimeName,
 	}
 	s, err := loadProcess()
 	if err != nil {
@@ -81,7 +89,11 @@ func (p *process) start() error {
 	if err != nil {
 		return err
 	}
-	args := []string{}
+	logPath := filepath.Join(cwd, "log.json")
+	args := []string{
+		"--log", logPath,
+		"--log-format", "json",
+	}
 	if p.state.Exec {
 		args = append(args, "exec",
 			"--process", filepath.Join(cwd, "process.json"),
@@ -114,7 +126,7 @@ func (p *process) start() error {
 		"--pid-file", filepath.Join(cwd, "pid"),
 		p.id,
 	)
-	cmd := exec.Command("runc", args...)
+	cmd := exec.Command(p.runtime, args...)
 	cmd.Dir = p.bundle
 	cmd.Stdin = p.stdio.stdin
 	cmd.Stdout = p.stdio.stdout
@@ -124,7 +136,20 @@ func (p *process) start() error {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Pdeathsig: syscall.SIGKILL,
 	}
-	if err := cmd.Run(); err != nil {
+	if err := cmd.Start(); err != nil {
+		if exErr, ok := err.(*exec.Error); ok {
+			if exErr.Err == exec.ErrNotFound || exErr.Err == os.ErrNotExist {
+				return fmt.Errorf("runc not installed on system")
+			}
+		}
+		return err
+	}
+	p.stdio.stdout.Close()
+	p.stdio.stderr.Close()
+	if err := cmd.Wait(); err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return errRuntime
+		}
 		return err
 	}
 	data, err := ioutil.ReadFile("pid")
@@ -137,7 +162,6 @@ func (p *process) start() error {
 	}
 	p.containerPid = pid
 	return nil
-
 }
 
 func (p *process) pid() int {
@@ -146,7 +170,10 @@ func (p *process) pid() int {
 
 func (p *process) delete() error {
 	if !p.state.Exec {
-		return exec.Command("runc", "delete", p.id).Run()
+		out, err := exec.Command(p.runtime, "delete", p.id).CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("%s: %v", out, err)
+		}
 	}
 	return nil
 }
@@ -175,9 +202,11 @@ func (p *process) openIO() error {
 		if err != nil {
 			return err
 		}
+		p.Add(1)
 		go func() {
 			io.Copy(stdout, console)
 			console.Close()
+			p.Done()
 		}()
 		return nil
 	}
@@ -192,10 +221,18 @@ func (p *process) openIO() error {
 			go io.Copy(i.Stdin, f)
 		},
 		p.state.Stdout: func(f *os.File) {
-			go io.Copy(f, i.Stdout)
+			p.Add(1)
+			go func() {
+				io.Copy(f, i.Stdout)
+				p.Done()
+			}()
 		},
 		p.state.Stderr: func(f *os.File) {
-			go io.Copy(f, i.Stderr)
+			p.Add(1)
+			go func() {
+				io.Copy(f, i.Stderr)
+				p.Done()
+			}()
 		},
 	} {
 		f, err := os.OpenFile(name, syscall.O_RDWR, 0)

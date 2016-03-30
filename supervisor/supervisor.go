@@ -6,13 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sort"
 	"sync"
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/docker/containerd/chanotify"
-	"github.com/docker/containerd/eventloop"
 	"github.com/docker/containerd/runtime"
 )
 
@@ -21,8 +18,8 @@ const (
 )
 
 // New returns an initialized Process supervisor.
-func New(stateDir string, oom bool) (*Supervisor, error) {
-	tasks := make(chan *startTask, 10)
+func New(stateDir string, runtimeName string) (*Supervisor, error) {
+	startTasks := make(chan *startTask, 10)
 	if err := os.MkdirAll(stateDir, 0755); err != nil {
 		return nil, err
 	}
@@ -37,41 +34,18 @@ func New(stateDir string, oom bool) (*Supervisor, error) {
 	s := &Supervisor{
 		stateDir:    stateDir,
 		containers:  make(map[string]*containerInfo),
-		tasks:       tasks,
+		startTasks:  startTasks,
 		machine:     machine,
 		subscribers: make(map[chan Event]struct{}),
-		el:          eventloop.NewChanLoop(defaultBufferSize),
+		tasks:       make(chan Task, defaultBufferSize),
 		monitor:     monitor,
+		runtime:     runtimeName,
 	}
 	if err := setupEventLog(s); err != nil {
 		return nil, err
 	}
-	if oom {
-		s.notifier = chanotify.New()
-		go func() {
-			for id := range s.notifier.Chan() {
-				e := NewTask(OOMTaskType)
-				e.ID = id.(string)
-				s.SendTask(e)
-			}
-		}()
-	}
-	// register default event handlers
-	s.handlers = map[TaskType]Handler{
-		ExecExitTaskType:         &ExecExitTask{s},
-		ExitTaskType:             &ExitTask{s},
-		StartContainerTaskType:   &StartTask{s},
-		DeleteTaskType:           &DeleteTask{s},
-		GetContainerTaskType:     &GetContainersTask{s},
-		SignalTaskType:           &SignalTask{s},
-		AddProcessTaskType:       &AddProcessTask{s},
-		UpdateContainerTaskType:  &UpdateTask{s},
-		CreateCheckpointTaskType: &CreateCheckpointTask{s},
-		DeleteCheckpointTaskType: &DeleteCheckpointTask{s},
-		StatsTaskType:            &StatsTask{s},
-		UpdateProcessTaskType:    &UpdateProcessTask{s},
-	}
 	go s.exitHandler()
+	go s.oomHandler()
 	if err := s.restore(); err != nil {
 		return nil, err
 	}
@@ -129,28 +103,27 @@ func readEventLog(s *Supervisor) error {
 
 type Supervisor struct {
 	// stateDir is the directory on the system to store container runtime state information.
-	stateDir   string
+	stateDir string
+	// name of the OCI compatible runtime used to execute containers
+	runtime    string
 	containers map[string]*containerInfo
-	handlers   map[TaskType]Handler
-	events     chan *Task
-	tasks      chan *startTask
+	startTasks chan *startTask
 	// we need a lock around the subscribers map only because additions and deletions from
 	// the map are via the API so we cannot really control the concurrency
 	subscriberLock sync.RWMutex
 	subscribers    map[chan Event]struct{}
 	machine        Machine
-	notifier       *chanotify.Notifier
-	el             eventloop.EventLoop
+	tasks          chan Task
 	monitor        *Monitor
 	eventLog       []Event
 }
 
-// Stop closes all tasks and sends a SIGTERM to each container's pid1 then waits for they to
+// Stop closes all startTasks and sends a SIGTERM to each container's pid1 then waits for they to
 // terminate.  After it has handled all the SIGCHILD events it will close the signals chan
 // and exit.  Stop is a non-blocking call and will return after the containers have been signaled
 func (s *Supervisor) Stop() {
-	// Close the tasks channel so that no new containers get started
-	close(s.tasks)
+	// Close the startTasks channel so that no new containers get started
+	close(s.startTasks)
 }
 
 // Close closes any open files in the supervisor but expects that Stop has been
@@ -163,7 +136,7 @@ type Event struct {
 	ID        string    `json:"id"`
 	Type      string    `json:"type"`
 	Timestamp time.Time `json:"timestamp"`
-	Pid       string    `json:"pid,omitempty"`
+	PID       string    `json:"pid,omitempty"`
 	Status    int       `json:"status,omitempty"`
 }
 
@@ -181,6 +154,11 @@ func (s *Supervisor) Events(from time.Time) chan Event {
 			if e.Timestamp.After(from) {
 				c <- e
 			}
+		}
+		// Notify the client that from now on it's live events
+		c <- Event{
+			Type:      "live",
+			Timestamp: time.Now(),
 		}
 	}
 	return c
@@ -217,8 +195,18 @@ func (s *Supervisor) notifySubscribers(e Event) {
 // therefore it is save to do operations in the handlers that modify state of the system or
 // state of the Supervisor
 func (s *Supervisor) Start() error {
-	logrus.WithField("stateDir", s.stateDir).Debug("containerd: supervisor running")
-	return s.el.Start()
+	logrus.WithFields(logrus.Fields{
+		"stateDir": s.stateDir,
+		"runtime":  s.runtime,
+		"memory":   s.machine.Memory,
+		"cpus":     s.machine.Cpus,
+	}).Debug("containerd: supervisor running")
+	go func() {
+		for i := range s.tasks {
+			s.handleTask(i)
+		}
+	}()
+	return nil
 }
 
 // Machine returns the machine information for which the
@@ -228,15 +216,25 @@ func (s *Supervisor) Machine() Machine {
 }
 
 // SendTask sends the provided event the the supervisors main event loop
-func (s *Supervisor) SendTask(evt *Task) {
+func (s *Supervisor) SendTask(evt Task) {
 	TasksCounter.Inc(1)
-	s.el.Send(&commonTask{data: evt, sv: s})
+	s.tasks <- evt
 }
 
 func (s *Supervisor) exitHandler() {
 	for p := range s.monitor.Exits() {
-		e := NewTask(ExitTaskType)
-		e.Process = p
+		e := &ExitTask{
+			Process: p,
+		}
+		s.SendTask(e)
+	}
+}
+
+func (s *Supervisor) oomHandler() {
+	for id := range s.monitor.OOMs() {
+		e := &OOMTask{
+			ID: id,
+		}
 		s.SendTask(e)
 	}
 }
@@ -263,47 +261,36 @@ func (s *Supervisor) restore() error {
 		if err != nil {
 			return err
 		}
+
 		ContainersCounter.Inc(1)
 		s.containers[id] = &containerInfo{
 			container: container,
 		}
+		if err := s.monitor.MonitorOOM(container); err != nil && err != runtime.ErrContainerExited {
+			logrus.WithField("error", err).Error("containerd: notify OOM events")
+		}
 		logrus.WithField("id", id).Debug("containerd: container restored")
 		var exitedProcesses []runtime.Process
 		for _, p := range processes {
-			if _, err := p.ExitStatus(); err == nil {
-				exitedProcesses = append(exitedProcesses, p)
-			} else {
+			if p.State() == runtime.Running {
 				if err := s.monitorProcess(p); err != nil {
 					return err
 				}
+			} else {
+				exitedProcesses = append(exitedProcesses, p)
 			}
 		}
 		if len(exitedProcesses) > 0 {
 			// sort processes so that init is fired last because that is how the kernel sends the
 			// exit events
-			sort.Sort(&processSorter{exitedProcesses})
+			sortProcesses(exitedProcesses)
 			for _, p := range exitedProcesses {
-				e := NewTask(ExitTaskType)
-				e.Process = p
+				e := &ExitTask{
+					Process: p,
+				}
 				s.SendTask(e)
 			}
 		}
 	}
 	return nil
-}
-
-type processSorter struct {
-	processes []runtime.Process
-}
-
-func (s *processSorter) Len() int {
-	return len(s.processes)
-}
-
-func (s *processSorter) Swap(i, j int) {
-	s.processes[i], s.processes[j] = s.processes[j], s.processes[i]
-}
-
-func (s *processSorter) Less(i, j int) bool {
-	return s.processes[j].ID() == "init"
 }

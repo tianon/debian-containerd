@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/docker/containerd/runtime"
-	"github.com/opencontainers/specs"
+	"github.com/docker/containerd/specs"
 )
 
 type testProcess struct {
@@ -45,8 +45,8 @@ func (p *testProcess) Container() runtime.Container {
 	return nil
 }
 
-func (p *testProcess) Spec() specs.Process {
-	return specs.Process{}
+func (p *testProcess) Spec() specs.ProcessSpec {
+	return specs.ProcessSpec{}
 }
 
 func (p *testProcess) Signal(os.Signal) error {
@@ -55,6 +55,10 @@ func (p *testProcess) Signal(os.Signal) error {
 
 func (p *testProcess) Close() error {
 	return nil
+}
+
+func (p *testProcess) State() runtime.State {
+	return runtime.Running
 }
 
 func TestSortProcesses(t *testing.T) {
