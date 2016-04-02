@@ -19,7 +19,7 @@ Build-Depends: debhelper (>= 9),
                golang-metrics-dev
 Standards-Version: 3.9.6
 Homepage: https://containerd.tools
-Vcs-Git: git://anonscm.debian.org/pkg-go/packages/containerd.git
+Vcs-Git: https://anonscm.debian.org/git/pkg-go/packages/containerd.git
 Vcs-Browser: https://anonscm.debian.org/cgit/pkg-go/packages/containerd.git
 XS-Go-Import-Path: github.com/docker/containerd
 
