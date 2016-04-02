@@ -1,9 +1,13 @@
 #!/usr/bin/make -f
 
-export DH_GOLANG_BUILDPKG := \
-	github.com/docker/containerd/ctr \
-	github.com/docker/containerd/containerd \
-	github.com/docker/containerd/containerd-shim
+# there's Go code in hack/ but nothing we should test/ship
+export DH_GOLANG_EXCLUDES := github.com/docker/containerd/hack
+
+override_dh_auto_install:
+	dh_auto_install
+	
+	# the source of containerd is not necessary to ship (yet?)
+	rm -r debian/containerd/usr/share/gocode
 
 %:
 	dh $@ --buildsystem=golang --with=golang
