@@ -28,7 +28,7 @@ import (
 func getClient(ctx *cli.Context) types.APIClient {
 	// reset the logger for grpc to log to dev/null so that it does not mess with our stdio
 	grpclog.SetLogger(log.New(ioutil.Discard, "", log.LstdFlags))
-	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	dialOpts := []grpc.DialOption{grpc.WithInsecure(), grpc.WithTimeout(ctx.GlobalDuration("conn-timeout"))}
 	dialOpts = append(dialOpts,
 		grpc.WithDialer(func(addr string, timeout time.Duration) (net.Conn, error) {
 			return net.DialTimeout("unix", addr, timeout)
@@ -124,6 +124,10 @@ var startCommand = cli.Command{
 			Value: &cli.StringSlice{},
 			Usage: "set labels for the container",
 		},
+		cli.BoolFlag{
+			Name:  "no-pivot",
+			Usage: "do not use pivot root",
+		},
 	},
 	Action: func(context *cli.Context) {
 		var (
@@ -145,18 +149,29 @@ var startCommand = cli.Command{
 			fatal(err.Error(), 1)
 		}
 		var (
-			tty bool
-			c   = getClient(context)
-			r   = &types.CreateContainerRequest{
-				Id:         id,
-				BundlePath: bpath,
-				Checkpoint: context.String("checkpoint"),
-				Stdin:      s.stdin,
-				Stdout:     s.stdout,
-				Stderr:     s.stderr,
-				Labels:     context.StringSlice("label"),
+			restoreAndCloseStdin func()
+			tty                  bool
+			c                    = getClient(context)
+			r                    = &types.CreateContainerRequest{
+				Id:          id,
+				BundlePath:  bpath,
+				Checkpoint:  context.String("checkpoint"),
+				Stdin:       s.stdin,
+				Stdout:      s.stdout,
+				Stderr:      s.stderr,
+				Labels:      context.StringSlice("label"),
+				NoPivotRoot: context.Bool("no-pivot"),
 			}
 		)
+		restoreAndCloseStdin = func() {
+			if state != nil {
+				term.RestoreTerminal(os.Stdin.Fd(), state)
+			}
+			if stdin != nil {
+				stdin.Close()
+			}
+		}
+		defer restoreAndCloseStdin()
 		if context.Bool("attach") {
 			mkterm, err := readTermSetting(bpath)
 			if err != nil {
@@ -182,12 +197,6 @@ var startCommand = cli.Command{
 			fatal(err.Error(), 1)
 		}
 		if context.Bool("attach") {
-			restoreAndCloseStdin := func() {
-				if state != nil {
-					term.RestoreTerminal(os.Stdin.Fd(), state)
-				}
-				stdin.Close()
-			}
 			go func() {
 				io.Copy(stdin, os.Stdin)
 				if _, err := c.UpdateProcess(netcontext.Background(), &types.UpdateProcessRequest{
@@ -211,9 +220,7 @@ var startCommand = cli.Command{
 					}
 				}()
 			}
-			if err := waitForExit(c, events, id, "init", restoreAndCloseStdin); err != nil {
-				fatal(err.Error(), 1)
-			}
+			waitForExit(c, events, id, "init", restoreAndCloseStdin)
 		}
 	},
 }
@@ -422,6 +429,8 @@ var execCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) {
+		var restoreAndCloseStdin func()
+
 		p := &types.AddProcessRequest{
 			Id:       context.String("id"),
 			Pid:      context.String("pid"),
@@ -441,6 +450,15 @@ var execCommand = cli.Command{
 		p.Stdin = s.stdin
 		p.Stdout = s.stdout
 		p.Stderr = s.stderr
+		restoreAndCloseStdin = func() {
+			if state != nil {
+				term.RestoreTerminal(os.Stdin.Fd(), state)
+			}
+			if stdin != nil {
+				stdin.Close()
+			}
+		}
+		defer restoreAndCloseStdin()
 		if context.Bool("attach") {
 			if context.Bool("tty") {
 				s, err := term.SetRawTerminal(os.Stdin.Fd())
@@ -462,12 +480,6 @@ var execCommand = cli.Command{
 			fatal(err.Error(), 1)
 		}
 		if context.Bool("attach") {
-			restoreAndCloseStdin := func() {
-				if state != nil {
-					term.RestoreTerminal(os.Stdin.Fd(), state)
-				}
-				stdin.Close()
-			}
 			go func() {
 				io.Copy(stdin, os.Stdin)
 				if _, err := c.UpdateProcess(netcontext.Background(), &types.UpdateProcessRequest{
@@ -491,9 +503,7 @@ var execCommand = cli.Command{
 					}
 				}()
 			}
-			if err := waitForExit(c, events, context.String("id"), context.String("pid"), restoreAndCloseStdin); err != nil {
-				fatal(err.Error(), 1)
-			}
+			waitForExit(c, events, context.String("id"), context.String("pid"), restoreAndCloseStdin)
 		}
 	},
 }
@@ -571,20 +581,21 @@ var updateCommand = cli.Command{
 	},
 }
 
-func waitForExit(c types.APIClient, events types.API_EventsClient, id, pid string, closer func()) error {
+func waitForExit(c types.APIClient, events types.API_EventsClient, id, pid string, closer func()) {
+	timestamp := uint64(time.Now().Unix())
 	for {
 		e, err := events.Recv()
 		if err != nil {
 			time.Sleep(1 * time.Second)
-			events, _ = c.Events(netcontext.Background(), &types.EventsRequest{})
+			events, _ = c.Events(netcontext.Background(), &types.EventsRequest{Timestamp: timestamp})
 			continue
 		}
+		timestamp = e.Timestamp
 		if e.Id == id && e.Type == "exit" && e.Pid == pid {
 			closer()
 			os.Exit(int(e.Status))
 		}
 	}
-	return nil
 }
 
 type stdio struct {

@@ -12,12 +12,40 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 
-	"github.com/docker/containerd/runtime"
-	"github.com/opencontainers/runc/libcontainer"
+	"github.com/docker/containerd/specs"
 )
 
 var errRuntime = errors.New("shim: runtime execution error")
+
+type checkpoint struct {
+	// Timestamp is the time that checkpoint happened
+	Created time.Time `json:"created"`
+	// Name is the name of the checkpoint
+	Name string `json:"name"`
+	// Tcp checkpoints open tcp connections
+	Tcp bool `json:"tcp"`
+	// UnixSockets persists unix sockets in the checkpoint
+	UnixSockets bool `json:"unixSockets"`
+	// Shell persists tty sessions in the checkpoint
+	Shell bool `json:"shell"`
+	// Exit exits the container after the checkpoint is finished
+	Exit bool `json:"exit"`
+}
+
+type processState struct {
+	specs.ProcessSpec
+	Exec        bool     `json:"exec"`
+	Stdin       string   `json:"containerdStdin"`
+	Stdout      string   `json:"containerdStdout"`
+	Stderr      string   `json:"containerdStderr"`
+	RuntimeArgs []string `json:"runtimeArgs"`
+	NoPivotRoot bool     `json:"noPivotRoot"`
+	Checkpoint  string   `json:"checkpoint"`
+	RootUID     int      `json:"rootUID"`
+	RootGID     int      `json:"rootGID"`
+}
 
 type process struct {
 	sync.WaitGroup
@@ -26,11 +54,12 @@ type process struct {
 	stdio        *stdio
 	exec         bool
 	containerPid int
-	checkpoint   *runtime.Checkpoint
+	checkpoint   *checkpoint
 	shimIO       *IO
-	console      libcontainer.Console
+	stdinCloser  io.Closer
+	console      *os.File
 	consolePath  string
-	state        *runtime.ProcessState
+	state        *processState
 	runtime      string
 }
 
@@ -58,26 +87,26 @@ func newProcess(id, bundle, runtimeName string) (*process, error) {
 	return p, nil
 }
 
-func loadProcess() (*runtime.ProcessState, error) {
+func loadProcess() (*processState, error) {
 	f, err := os.Open("process.json")
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	var s runtime.ProcessState
+	var s processState
 	if err := json.NewDecoder(f).Decode(&s); err != nil {
 		return nil, err
 	}
 	return &s, nil
 }
 
-func loadCheckpoint(bundle, name string) (*runtime.Checkpoint, error) {
+func loadCheckpoint(bundle, name string) (*checkpoint, error) {
 	f, err := os.Open(filepath.Join(bundle, "checkpoints", name, "config.json"))
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	var cpt runtime.Checkpoint
+	var cpt checkpoint
 	if err := json.NewDecoder(f).Decode(&cpt); err != nil {
 		return nil, err
 	}
@@ -90,10 +119,10 @@ func (p *process) start() error {
 		return err
 	}
 	logPath := filepath.Join(cwd, "log.json")
-	args := []string{
+	args := append([]string{
 		"--log", logPath,
 		"--log-format", "json",
-	}
+	}, p.state.RuntimeArgs...)
 	if p.state.Exec {
 		args = append(args, "exec",
 			"--process", filepath.Join(cwd, "process.json"),
@@ -115,11 +144,17 @@ func (p *process) start() error {
 		if p.checkpoint.UnixSockets {
 			add("--ext-unix-sk")
 		}
+		if p.state.NoPivotRoot {
+			add("--no-pivot")
+		}
 	} else {
 		args = append(args, "start",
 			"--bundle", p.bundle,
 			"--console", p.consolePath,
 		)
+		if p.state.NoPivotRoot {
+			args = append(args, "--no-pivot")
+		}
 	}
 	args = append(args,
 		"-d",
@@ -139,7 +174,7 @@ func (p *process) start() error {
 	if err := cmd.Start(); err != nil {
 		if exErr, ok := err.(*exec.Error); ok {
 			if exErr.Err == exec.ErrNotFound || exErr.Err == os.ErrNotExist {
-				return fmt.Errorf("runc not installed on system")
+				return fmt.Errorf("%s not installed on system", p.runtime)
 			}
 		}
 		return err
@@ -186,26 +221,32 @@ func (p *process) openIO() error {
 		uid = p.state.RootUID
 		gid = p.state.RootGID
 	)
+	go func() {
+		if stdinCloser, err := os.OpenFile(p.state.Stdin, syscall.O_WRONLY, 0); err == nil {
+			p.stdinCloser = stdinCloser
+		}
+	}()
+
 	if p.state.Terminal {
-		console, err := libcontainer.NewConsole(uid, gid)
+		master, console, err := newConsole(uid, gid)
 		if err != nil {
 			return err
 		}
-		p.console = console
-		p.consolePath = console.Path()
-		stdin, err := os.OpenFile(p.state.Stdin, syscall.O_RDWR, 0)
+		p.console = master
+		p.consolePath = console
+		stdin, err := os.OpenFile(p.state.Stdin, syscall.O_RDONLY, 0)
 		if err != nil {
 			return err
 		}
-		go io.Copy(console, stdin)
+		go io.Copy(master, stdin)
 		stdout, err := os.OpenFile(p.state.Stdout, syscall.O_RDWR, 0)
 		if err != nil {
 			return err
 		}
 		p.Add(1)
 		go func() {
-			io.Copy(stdout, console)
-			console.Close()
+			io.Copy(stdout, master)
+			master.Close()
 			p.Done()
 		}()
 		return nil
@@ -217,9 +258,6 @@ func (p *process) openIO() error {
 	p.shimIO = i
 	// non-tty
 	for name, dest := range map[string]func(f *os.File){
-		p.state.Stdin: func(f *os.File) {
-			go io.Copy(i.Stdin, f)
-		},
 		p.state.Stdout: func(f *os.File) {
 			p.Add(1)
 			go func() {
@@ -241,6 +279,16 @@ func (p *process) openIO() error {
 		}
 		dest(f)
 	}
+
+	f, err := os.OpenFile(p.state.Stdin, syscall.O_RDONLY, 0)
+	if err != nil {
+		return err
+	}
+	go func() {
+		io.Copy(i.Stdin, f)
+		i.Stdin.Close()
+	}()
+
 	return nil
 }
 

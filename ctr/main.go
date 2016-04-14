@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -11,7 +12,20 @@ import (
 
 const usage = `High performance container daemon cli`
 
+type Exit struct {
+	Code int
+}
+
 func main() {
+	// We want our defer functions to be run when calling fatal()
+	defer func() {
+		if e := recover(); e != nil {
+			if ex, ok := e.(Exit); ok == true {
+				os.Exit(ex.Code)
+			}
+			panic(e)
+		}
+	}()
 	app := cli.NewApp()
 	app.Name = "ctr"
 	if containerd.GitCommit != "" {
@@ -29,6 +43,11 @@ func main() {
 			Name:  "address",
 			Value: "/run/containerd/containerd.sock",
 			Usage: "address of GRPC API",
+		},
+		cli.DurationFlag{
+			Name:  "conn-timeout",
+			Value: 1 * time.Second,
+			Usage: "GRPC connection timeout",
 		},
 	}
 	app.Commands = []cli.Command{
@@ -50,5 +69,5 @@ func main() {
 
 func fatal(err string, code int) {
 	fmt.Fprintf(os.Stderr, "[ctr] %s\n", err)
-	os.Exit(code)
+	panic(Exit{code})
 }

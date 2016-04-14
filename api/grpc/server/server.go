@@ -38,6 +38,7 @@ func (s *apiServer) CreateContainer(ctx context.Context, c *types.CreateContaine
 	e.Stdout = c.Stdout
 	e.Stderr = c.Stderr
 	e.Labels = c.Labels
+	e.NoPivotRoot = c.NoPivotRoot
 	e.StartResponse = make(chan supervisor.StartResponse, 1)
 	createContainerConfigCheckpoint(e, c)
 	s.sv.SendTask(e)
@@ -124,7 +125,7 @@ func (s *apiServer) State(ctx context.Context, r *types.StateRequest) (*types.St
 func createAPIContainer(c runtime.Container, getPids bool) (*types.Container, error) {
 	processes, err := c.Processes()
 	if err != nil {
-		return nil, grpc.Errorf(codes.Internal, "get processes for container")
+		return nil, grpc.Errorf(codes.Internal, "get processes for container: "+err.Error())
 	}
 	var procs []*types.Process
 	for _, p := range processes {
@@ -148,7 +149,7 @@ func createAPIContainer(c runtime.Container, getPids bool) (*types.Container, er
 	state := c.State()
 	if getPids && (state == runtime.Running || state == runtime.Paused) {
 		if pids, err = c.Pids(); err != nil {
-			return nil, grpc.Errorf(codes.Internal, "get all pids for container")
+			return nil, grpc.Errorf(codes.Internal, "get all pids for container: "+err.Error())
 		}
 	}
 	return &types.Container{
