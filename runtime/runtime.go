@@ -17,6 +17,7 @@ var (
 	ErrProcessNotExited      = errors.New("containerd: process has not exited")
 	ErrProcessExited         = errors.New("containerd: process has exited")
 	ErrContainerNotStarted   = errors.New("containerd: container not started")
+	ErrContainerStartTimeout = errors.New("containerd: container did not start before the specified timeout")
 
 	errNoPidFile      = errors.New("containerd: no process pid file found")
 	errInvalidPidInt  = errors.New("containerd: process pid is invalid")
@@ -53,20 +54,24 @@ const (
 )
 
 type state struct {
-	Bundle  string   `json:"bundle"`
-	Labels  []string `json:"labels"`
-	Stdin   string   `json:"stdin"`
-	Stdout  string   `json:"stdout"`
-	Stderr  string   `json:"stderr"`
-	Runtime string   `json:"runtime"`
+	Bundle      string   `json:"bundle"`
+	Labels      []string `json:"labels"`
+	Stdin       string   `json:"stdin"`
+	Stdout      string   `json:"stdout"`
+	Stderr      string   `json:"stderr"`
+	Runtime     string   `json:"runtime"`
+	RuntimeArgs []string `json:"runtimeArgs"`
+	NoPivotRoot bool     `json:"noPivotRoot"`
 }
 
 type ProcessState struct {
 	specs.ProcessSpec
-	Exec   bool   `json:"exec"`
-	Stdin  string `json:"containerdStdin"`
-	Stdout string `json:"containerdStdout"`
-	Stderr string `json:"containerdStderr"`
+	Exec        bool     `json:"exec"`
+	Stdin       string   `json:"containerdStdin"`
+	Stdout      string   `json:"containerdStdout"`
+	Stderr      string   `json:"containerdStderr"`
+	RuntimeArgs []string `json:"runtimeArgs"`
+	NoPivotRoot bool     `json:"noPivotRoot"`
 
 	PlatformProcessState
 }

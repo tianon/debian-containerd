@@ -18,7 +18,7 @@ const (
 )
 
 // New returns an initialized Process supervisor.
-func New(stateDir string, runtimeName string) (*Supervisor, error) {
+func New(stateDir string, runtimeName string, runtimeArgs []string, timeout time.Duration) (*Supervisor, error) {
 	startTasks := make(chan *startTask, 10)
 	if err := os.MkdirAll(stateDir, 0755); err != nil {
 		return nil, err
@@ -40,6 +40,8 @@ func New(stateDir string, runtimeName string) (*Supervisor, error) {
 		tasks:       make(chan Task, defaultBufferSize),
 		monitor:     monitor,
 		runtime:     runtimeName,
+		runtimeArgs: runtimeArgs,
+		timeout:     timeout,
 	}
 	if err := setupEventLog(s); err != nil {
 		return nil, err
@@ -92,7 +94,7 @@ func readEventLog(s *Supervisor) error {
 		var e Event
 		if err := dec.Decode(&e); err != nil {
 			if err == io.EOF {
-				return nil
+				break
 			}
 			return err
 		}
@@ -105,9 +107,10 @@ type Supervisor struct {
 	// stateDir is the directory on the system to store container runtime state information.
 	stateDir string
 	// name of the OCI compatible runtime used to execute containers
-	runtime    string
-	containers map[string]*containerInfo
-	startTasks chan *startTask
+	runtime     string
+	runtimeArgs []string
+	containers  map[string]*containerInfo
+	startTasks  chan *startTask
 	// we need a lock around the subscribers map only because additions and deletions from
 	// the map are via the API so we cannot really control the concurrency
 	subscriberLock sync.RWMutex
@@ -116,6 +119,7 @@ type Supervisor struct {
 	tasks          chan Task
 	monitor        *Monitor
 	eventLog       []Event
+	timeout        time.Duration
 }
 
 // Stop closes all startTasks and sends a SIGTERM to each container's pid1 then waits for they to
@@ -196,10 +200,11 @@ func (s *Supervisor) notifySubscribers(e Event) {
 // state of the Supervisor
 func (s *Supervisor) Start() error {
 	logrus.WithFields(logrus.Fields{
-		"stateDir": s.stateDir,
-		"runtime":  s.runtime,
-		"memory":   s.machine.Memory,
-		"cpus":     s.machine.Cpus,
+		"stateDir":    s.stateDir,
+		"runtime":     s.runtime,
+		"runtimeArgs": s.runtimeArgs,
+		"memory":      s.machine.Memory,
+		"cpus":        s.machine.Cpus,
 	}).Debug("containerd: supervisor running")
 	go func() {
 		for i := range s.tasks {

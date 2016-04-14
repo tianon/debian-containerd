@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/docker/containerd/specs"
@@ -82,28 +83,44 @@ func NewStdio(stdin, stdout, stderr string) Stdio {
 	}
 }
 
+type ContainerOpts struct {
+	Root        string
+	ID          string
+	Bundle      string
+	Runtime     string
+	RuntimeArgs []string
+	Labels      []string
+	NoPivotRoot bool
+	Timeout     time.Duration
+}
+
 // New returns a new container
-func New(root, id, bundle, runtimeName string, labels []string) (Container, error) {
+func New(opts ContainerOpts) (Container, error) {
 	c := &container{
-		root:      root,
-		id:        id,
-		bundle:    bundle,
-		labels:    labels,
-		processes: make(map[string]*process),
-		runtime:   runtimeName,
+		root:        opts.Root,
+		id:          opts.ID,
+		bundle:      opts.Bundle,
+		labels:      opts.Labels,
+		processes:   make(map[string]*process),
+		runtime:     opts.Runtime,
+		runtimeArgs: opts.RuntimeArgs,
+		noPivotRoot: opts.NoPivotRoot,
+		timeout:     opts.Timeout,
 	}
-	if err := os.Mkdir(filepath.Join(root, id), 0755); err != nil {
+	if err := os.Mkdir(filepath.Join(c.root, c.id), 0755); err != nil {
 		return nil, err
 	}
-	f, err := os.Create(filepath.Join(root, id, StateFile))
+	f, err := os.Create(filepath.Join(c.root, c.id, StateFile))
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 	if err := json.NewEncoder(f).Encode(state{
-		Bundle:  bundle,
-		Labels:  labels,
-		Runtime: runtimeName,
+		Bundle:      c.bundle,
+		Labels:      c.labels,
+		Runtime:     c.runtime,
+		RuntimeArgs: c.runtimeArgs,
+		NoPivotRoot: opts.NoPivotRoot,
 	}); err != nil {
 		return nil, err
 	}
@@ -121,12 +138,14 @@ func Load(root, id string) (Container, error) {
 		return nil, err
 	}
 	c := &container{
-		root:      root,
-		id:        id,
-		bundle:    s.Bundle,
-		labels:    s.Labels,
-		runtime:   s.Runtime,
-		processes: make(map[string]*process),
+		root:        root,
+		id:          id,
+		bundle:      s.Bundle,
+		labels:      s.Labels,
+		runtime:     s.Runtime,
+		runtimeArgs: s.RuntimeArgs,
+		noPivotRoot: s.NoPivotRoot,
+		processes:   make(map[string]*process),
 	}
 	dirs, err := ioutil.ReadDir(filepath.Join(root, id))
 	if err != nil {
@@ -166,13 +185,16 @@ func readProcessState(dir string) (*ProcessState, error) {
 
 type container struct {
 	// path to store runtime state information
-	root      string
-	id        string
-	bundle    string
-	runtime   string
-	processes map[string]*process
-	labels    []string
-	oomFds    []int
+	root        string
+	id          string
+	bundle      string
+	runtime     string
+	runtimeArgs []string
+	processes   map[string]*process
+	labels      []string
+	oomFds      []int
+	noPivotRoot bool
+	timeout     time.Duration
 }
 
 func (c *container) ID() string {
@@ -202,7 +224,12 @@ func (c *container) readSpec() (*specs.Spec, error) {
 
 func (c *container) Delete() error {
 	err := os.RemoveAll(filepath.Join(c.root, c.id))
-	exec.Command(c.runtime, "delete", c.id).Run()
+
+	args := c.runtimeArgs
+	args = append(args, "delete", c.id)
+	if derr := exec.Command(c.runtime, args...).Run(); err == nil {
+		err = derr
+	}
 	return err
 }
 
