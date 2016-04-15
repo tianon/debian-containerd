@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 9),
                golang-github-codegangsta-cli-dev,
                golang-github-cyberdelia-go-metrics-graphite-dev,
                golang-github-docker-docker-dev,
-               golang-github-opencontainers-runc-dev,
+               golang-github-opencontainers-runc-dev (>= 0.1.0~),
                golang-github-opencontainers-specs-dev,
                golang-github-sirupsen-logrus-dev,
                golang-go,
@@ -25,7 +25,7 @@ XS-Go-Import-Path: github.com/docker/containerd
 
 Package: containerd
 Architecture: linux-any
-Depends: runc, ${misc:Depends}, ${shlibs:Depends}
+Depends: runc (>= 0.1.0~), ${misc:Depends}, ${shlibs:Depends}
 Built-Using: ${misc:Built-Using}
 Description: a daemon to control runC
  Containerd is a daemon to control runC, built for performance and density.
