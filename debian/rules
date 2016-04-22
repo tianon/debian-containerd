@@ -3,8 +3,5 @@
 # there's Go code in hack/ but nothing we should test/ship 
 export DH_GOLANG_EXCLUDES := github.com/docker/containerd/hack github.com/docker/containerd/integration-test
 
-override_dh_auto_install:
-	dh_auto_install
-
 %:
 	dh $@ --buildsystem=golang --with=golang

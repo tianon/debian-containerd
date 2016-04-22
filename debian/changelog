@@ -1,13 +1,10 @@
-containerd (0.2.0~ds1-2) UNRELEASED; urgency=medium
-
-  * Team upload
-  * Build development packge golang-github-docker-containerd-dev
-
- -- Tim Potter <tpot@hpe.com>  Mon, 18 Apr 2016 09:17:37 +1000
-
 containerd (0.2.0~ds1-1) UNRELEASED; urgency=medium
 
+  [ Tianon Gravi ]
   * Update to 0.2.0 upstream release
+
+  [ Tim Potter ]
+  * Build development packge golang-github-docker-containerd-dev
 
  -- Tianon Gravi <tianon@debian.org>  Thu, 14 Apr 2016 15:36:42 -0700
 
