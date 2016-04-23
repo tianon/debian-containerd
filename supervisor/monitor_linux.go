@@ -5,7 +5,6 @@ import (
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/docker/containerd/archutils"
 	"github.com/docker/containerd/runtime"
 )
 
@@ -15,7 +14,7 @@ func NewMonitor() (*Monitor, error) {
 		exits:     make(chan runtime.Process, 1024),
 		ooms:      make(chan string, 1024),
 	}
-	fd, err := archutils.EpollCreate1(0)
+	fd, err := syscall.EpollCreate1(0)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +47,7 @@ func (m *Monitor) Monitor(p runtime.Process) error {
 		Fd:     int32(fd),
 		Events: syscall.EPOLLHUP,
 	}
-	if err := archutils.EpollCtl(m.epollFd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
+	if err := syscall.EpollCtl(m.epollFd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
 		return err
 	}
 	EpollFdCounter.Inc(1)
@@ -68,7 +67,7 @@ func (m *Monitor) MonitorOOM(c runtime.Container) error {
 		Fd:     int32(fd),
 		Events: syscall.EPOLLHUP | syscall.EPOLLIN,
 	}
-	if err := archutils.EpollCtl(m.epollFd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
+	if err := syscall.EpollCtl(m.epollFd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
 		return err
 	}
 	EpollFdCounter.Inc(1)
@@ -83,7 +82,7 @@ func (m *Monitor) Close() error {
 func (m *Monitor) start() {
 	var events [128]syscall.EpollEvent
 	for {
-		n, err := archutils.EpollWait(m.epollFd, events[:], -1)
+		n, err := syscall.EpollWait(m.epollFd, events[:], -1)
 		if err != nil {
 			if err == syscall.EINTR {
 				continue
