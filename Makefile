@@ -91,3 +91,6 @@ ifneq ($(wildcard /.dockerenv), )
 endif
 
 validate: fmt
+
+vet:
+	go vet $(shell go list ./... | grep -v vendor)
