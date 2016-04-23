@@ -37,18 +37,18 @@ Description: a daemon to control runC
 
 Package: golang-github-docker-containerd-dev
 Architecture: all
-Depends: ${misc:Depends},
-               golang-github-cloudfoundry-gosigar-dev,
-               golang-github-codegangsta-cli-dev,
-               golang-github-cyberdelia-go-metrics-graphite-dev,
-               golang-github-docker-docker-dev,
-               golang-github-opencontainers-runc-dev (>= 0.1.0~),
-               golang-github-opencontainers-specs-dev,
-               golang-github-sirupsen-logrus-dev,
-               golang-golang-x-net-dev,
-               golang-google-grpc-dev,
-               golang-goprotobuf-dev (>= 0.0~git20160330~),
-               golang-metrics-dev
+Depends: golang-github-cloudfoundry-gosigar-dev,
+         golang-github-codegangsta-cli-dev,
+         golang-github-cyberdelia-go-metrics-graphite-dev,
+         golang-github-docker-docker-dev,
+         golang-github-opencontainers-runc-dev (>= 0.1.0~),
+         golang-github-opencontainers-specs-dev,
+         golang-github-sirupsen-logrus-dev,
+         golang-golang-x-net-dev,
+         golang-google-grpc-dev,
+         golang-goprotobuf-dev (>= 0.0~git20160330~),
+         golang-metrics-dev,
+         ${misc:Depends}
 Description: Open Container Project - develpoment files
  Containerd is a daemon to control runC, built for performance and density.
  Containerd leverages runC's advanced features such as seccomp and user
