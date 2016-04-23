@@ -27,7 +27,7 @@ Package: containerd
 Architecture: linux-any
 Depends: runc (>= 0.1.0~), ${misc:Depends}, ${shlibs:Depends}
 Built-Using: ${misc:Built-Using}
-Description: a daemon to control runC
+Description: daemon to control runC
  Containerd is a daemon to control runC, built for performance and density.
  Containerd leverages runC's advanced features such as seccomp and user
  namespace support as well as checkpoint and restore for cloning and live
@@ -49,7 +49,7 @@ Depends: golang-github-cloudfoundry-gosigar-dev,
          golang-goprotobuf-dev (>= 0.0~git20160330~),
          golang-metrics-dev,
          ${misc:Depends}
-Description: Open Container Project - develpoment files
+Description: runC develpoment files
  Containerd is a daemon to control runC, built for performance and density.
  Containerd leverages runC's advanced features such as seccomp and user
  namespace support as well as checkpoint and restore for cloning and live
