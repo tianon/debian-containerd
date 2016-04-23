@@ -1,7 +1,7 @@
-containerd (0.2.0~ds1-1) UNRELEASED; urgency=medium
+containerd (0.2.1~ds1-1) UNRELEASED; urgency=medium
 
   [ Tianon Gravi ]
-  * Update to 0.2.0 upstream release
+  * Update to 0.2.1 upstream release
 
   [ Tim Potter ]
   * Add "golang-github-docker-containerd-dev" package (Closes: #822213)
