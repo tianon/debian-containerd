@@ -3,10 +3,11 @@ Source: https://github.com/docker/containerd
 Files-Excluded: vendor
 
 Files: *
-Copyright: 2013 Docker, Inc.
+Copyright: 2013-2016 Docker, Inc.
 License: Apache-2.0
 
 Files: docs/*
+Copyright: 2013-2016 Docker, Inc.
 License: CC-BY-SA-4.0
 
 Files: debian/*
