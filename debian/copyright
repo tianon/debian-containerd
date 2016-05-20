@@ -1,6 +1,5 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Source: https://github.com/docker/containerd
-Files-Excluded: vendor
 
 Files: *
 Copyright: 2013-2016 Docker, Inc.
