@@ -7,7 +7,7 @@ override_dh_auto_configure:
 	# use vendored deps
 	mkdir -p _build \
 		&& cd vendor \
-		&& cp -r . ../_build
+		&& cp -r . '$(CURDIR)/_build'
 	dh_auto_configure
 
 %:
