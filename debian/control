@@ -1,0 +1,58 @@
+Source: containerd
+Section: admin
+Priority: optional
+Maintainer: Debian Go Packaging Team <pkg-go-maintainers@lists.alioth.debian.org>
+Uploaders: Tianon Gravi <tianon@debian.org>
+Build-Depends: debhelper (>= 9),
+               dh-golang,
+               golang-github-cloudfoundry-gosigar-dev,
+               golang-github-codegangsta-cli-dev,
+               golang-github-cyberdelia-go-metrics-graphite-dev,
+               golang-github-docker-docker-dev,
+               golang-github-opencontainers-runc-dev (>= 0.1.0~),
+               golang-github-opencontainers-specs-dev,
+               golang-github-sirupsen-logrus-dev,
+               golang-go,
+               golang-golang-x-net-dev,
+               golang-google-grpc-dev,
+               golang-goprotobuf-dev (>= 0.0~git20160330~),
+               golang-metrics-dev
+Standards-Version: 3.9.7
+Homepage: https://containerd.tools
+Vcs-Git: https://anonscm.debian.org/git/pkg-go/packages/containerd.git
+Vcs-Browser: https://anonscm.debian.org/cgit/pkg-go/packages/containerd.git
+XS-Go-Import-Path: github.com/docker/containerd
+
+Package: containerd
+Architecture: linux-any
+Depends: runc (>= 0.1.0~), ${misc:Depends}, ${shlibs:Depends}
+Built-Using: ${misc:Built-Using}
+Description: daemon to control runC
+ Containerd is a daemon to control runC, built for performance and density.
+ Containerd leverages runC's advanced features such as seccomp and user
+ namespace support as well as checkpoint and restore for cloning and live
+ migration of containers.
+ .
+ This package contains the binaries.
+
+Package: golang-github-docker-containerd-dev
+Architecture: all
+Depends: golang-github-cloudfoundry-gosigar-dev,
+         golang-github-codegangsta-cli-dev,
+         golang-github-cyberdelia-go-metrics-graphite-dev,
+         golang-github-docker-docker-dev,
+         golang-github-opencontainers-runc-dev (>= 0.1.0~),
+         golang-github-opencontainers-specs-dev,
+         golang-github-sirupsen-logrus-dev,
+         golang-golang-x-net-dev,
+         golang-google-grpc-dev,
+         golang-goprotobuf-dev (>= 0.0~git20160330~),
+         golang-metrics-dev,
+         ${misc:Depends}
+Description: runC develpoment files
+ Containerd is a daemon to control runC, built for performance and density.
+ Containerd leverages runC's advanced features such as seccomp and user
+ namespace support as well as checkpoint and restore for cloning and live
+ migration of containers.
+ .
+ This package provides development files.

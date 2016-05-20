@@ -1,0 +1,17 @@
+containerd (0.2.1~ds1-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Tianon Gravi ]
+  * Update to 0.2.1 upstream release
+
+  [ Tim Potter ]
+  * Add "golang-github-docker-containerd-dev" package (Closes: #822213)
+
+ -- Dmitry Smirnov <onlyjob@debian.org>  Sat, 23 Apr 2016 22:54:15 +1000
+
+containerd (0.1.0~ds1-1) unstable; urgency=medium
+
+  * Initial release (Closes: #819520)
+
+ -- Tianon Gravi <tianon@debian.org>  Sat, 02 Apr 2016 11:05:01 -0700
