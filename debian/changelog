@@ -1,3 +1,9 @@
+containerd (0.2.1-0ubuntu2) yakkety; urgency=medium
+
+  * No change rebuild to pick up s390x fixes.
+
+ -- Michael Hudson-Doyle <michael.hudson@ubuntu.com>  Fri, 10 Jun 2016 15:13:39 +1200
+
 containerd (0.2.1-0ubuntu1) yakkety; urgency=medium
 
   * Use bundled dependencies for Ubuntu
