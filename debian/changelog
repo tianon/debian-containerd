@@ -1,3 +1,15 @@
+containerd (0.2.1~ds1-2) unstable; urgency=medium
+
+  * Team upload.
+  * Standards-Version: 3.9.8.
+  * Trim -dev package to avoid circular dependency with Docker.
+  * dev/Depends:
+    - golang-github-codegangsta-cli-dev
+    - golang-github-cyberdelia-go-metrics-graphite-dev
+    - golang-github-docker-docker-dev
+
+ -- Dmitry Smirnov <onlyjob@debian.org>  Mon, 13 Jun 2016 11:15:48 +1000
+
 containerd (0.2.1~ds1-1) unstable; urgency=medium
 
   * Team upload.
