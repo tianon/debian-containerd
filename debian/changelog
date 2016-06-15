@@ -1,3 +1,9 @@
+containerd (0.2.1-0ubuntu3) UNRELEASED; urgency=medium
+
+  * Fix "-dev" package Depends, and use vendoring more directly
+
+ -- Tianon Gravi <tianon@debian.org>  Wed, 15 Jun 2016 14:47:15 -0700
+
 containerd (0.2.1-0ubuntu2) yakkety; urgency=medium
 
   * No change rebuild to pick up s390x fixes.

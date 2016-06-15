@@ -1,14 +1,24 @@
 #!/usr/bin/make -f
 
-# there's Go code in hack/ but nothing we should test/ship 
-export DH_GOLANG_EXCLUDES := github.com/docker/containerd/hack github.com/docker/containerd/integration-test vendor
+# there's Go code in hack/ but nothing we should test/ship
+export DH_GOLANG_EXCLUDES := \
+	github.com/docker/containerd/hack \
+	github.com/docker/containerd/integration-test \
+	vendor
+
+# set DH_GOPKG for older dh-golang (backports)
+export DH_GOPKG := github.com/docker/containerd
+
+# prefer Go 1.6 if it's available (golang-1.6-go)
+export PATH := /usr/lib/go-1.6/bin:$(PATH)
 
 override_dh_auto_configure:
-	# use vendored deps
-	mkdir -p _build \
-		&& cd vendor \
-		&& cp -r . '$(CURDIR)/_build'
 	dh_auto_configure
+	# use vendored deps
+	rm -r '_build/src/$(DH_GOPKG)/vendor' \
+		&& mkdir '_build/src/$(DH_GOPKG)/vendor' \
+		&& cd vendor/src \
+		&& cp -r . '$(CURDIR)/_build/src/$(DH_GOPKG)/vendor'
 
 %:
 	dh $@ --buildsystem=golang --with=golang --builddirectory=_build
