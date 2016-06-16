@@ -20,5 +20,20 @@ override_dh_auto_configure:
 		&& cd vendor/src \
 		&& cp -r . '$(CURDIR)/_build/src/$(DH_GOPKG)/vendor'
 
+# The go tool does not fully support vendoring with gccgo, but we can
+# work around that by constructing the appropriate -I flag by hand.
+GCCGO := $(shell go tool dist env > /dev/null 2>&1 && echo no || echo yes)
+
+ifeq ($(GCCGO),yes)
+GOARCH := $(shell go env GOARCH)
+GOOS := $(shell go env GOOS)
+
+override_dh_auto_build:
+	dh_auto_build -- -gccgoflags="-I $(CURDIR)/_build/pkg/gccgo_$(GOOS)_$(GOARCH)/$(DH_GOPKG)/vendor"
+
+override_dh_auto_test:
+	dh_auto_test -- -gccgoflags="-I $(CURDIR)/_build/pkg/gccgo_$(GOOS)_$(GOARCH)/$(DH_GOPKG)/vendor"
+endif
+
 %:
 	dh $@ --buildsystem=golang --with=golang --builddirectory=_build
