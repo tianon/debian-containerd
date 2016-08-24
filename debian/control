@@ -15,7 +15,7 @@ XS-Go-Import-Path: github.com/docker/containerd
 
 Package: containerd
 Architecture: linux-any
-Depends: runc (>= 0.1.0~), ${misc:Depends}, ${shlibs:Depends}
+Depends: runc (>= 1.0.0~rc1~), ${misc:Depends}, ${shlibs:Depends}
 Built-Using: ${misc:Built-Using}
 Description: daemon to control runC
  Containerd is a daemon to control runC, built for performance and density.
