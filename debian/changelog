@@ -1,4 +1,10 @@
-containerd (0.2.1-0ubuntu3) UNRELEASED; urgency=medium
+containerd (0.2.1-0ubuntu4) yakkety; urgency=medium
+
+  * Add d/patches/fix-arm64.patch, a backport of upstream arm64 fixes.
+
+ -- Michael Hudson-Doyle <michael.hudson@ubuntu.com>  Wed, 06 Jul 2016 14:26:33 +1200
+
+containerd (0.2.1-0ubuntu3) yakkety; urgency=medium
 
   * Fix "-dev" package Depends, and use vendoring more directly
 
