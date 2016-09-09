@@ -1,0 +1,316 @@
+Description: Regenerate proto files against new grpc
+ The golang-google-grpc-dev package has been updated with an extra
+ parameter being added to the methodHandler signature.  This patch
+ was generated using "make protoc" and allows the package to build
+ against the new version of grpc.
+Author: Tim Potter <tpot@hpe.com>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: containerd/api/grpc/types/api.pb.go
+===================================================================
+--- containerd.orig/api/grpc/types/api.pb.go
++++ containerd/api/grpc/types/api.pb.go
+@@ -67,6 +67,12 @@ var _ = proto.Marshal
+ var _ = fmt.Errorf
+ var _ = math.Inf
+ 
++// This is a compile-time assertion to ensure that this generated file
++// is compatible with the proto package it is being compiled against.
++// A compilation error at this line likely means your copy of the
++// proto package needs to be updated.
++const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
++
+ type UpdateProcessRequest struct {
+ 	Id         string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+ 	Pid        string `protobuf:"bytes,2,opt,name=pid" json:"pid,omitempty"`
+@@ -190,7 +196,7 @@ func (*Rlimit) Descriptor() ([]byte, []i
+ type User struct {
+ 	Uid            uint32   `protobuf:"varint,1,opt,name=uid" json:"uid,omitempty"`
+ 	Gid            uint32   `protobuf:"varint,2,opt,name=gid" json:"gid,omitempty"`
+-	AdditionalGids []uint32 `protobuf:"varint,3,rep,name=additionalGids" json:"additionalGids,omitempty"`
++	AdditionalGids []uint32 `protobuf:"varint,3,rep,packed,name=additionalGids" json:"additionalGids,omitempty"`
+ }
+ 
+ func (m *User) Reset()                    { *m = User{} }
+@@ -348,7 +354,7 @@ type Container struct {
+ 	Processes  []*Process `protobuf:"bytes,3,rep,name=processes" json:"processes,omitempty"`
+ 	Status     string     `protobuf:"bytes,4,opt,name=status" json:"status,omitempty"`
+ 	Labels     []string   `protobuf:"bytes,5,rep,name=labels" json:"labels,omitempty"`
+-	Pids       []uint32   `protobuf:"varint,6,rep,name=pids" json:"pids,omitempty"`
++	Pids       []uint32   `protobuf:"varint,6,rep,packed,name=pids" json:"pids,omitempty"`
+ 	Runtime    string     `protobuf:"bytes,7,opt,name=runtime" json:"runtime,omitempty"`
+ }
+ 
+@@ -486,7 +492,7 @@ func (*NetworkStats) Descriptor() ([]byt
+ 
+ type CpuUsage struct {
+ 	TotalUsage        uint64   `protobuf:"varint,1,opt,name=total_usage,json=totalUsage" json:"total_usage,omitempty"`
+-	PercpuUsage       []uint64 `protobuf:"varint,2,rep,name=percpu_usage,json=percpuUsage" json:"percpu_usage,omitempty"`
++	PercpuUsage       []uint64 `protobuf:"varint,2,rep,packed,name=percpu_usage,json=percpuUsage" json:"percpu_usage,omitempty"`
+ 	UsageInKernelmode uint64   `protobuf:"varint,3,opt,name=usage_in_kernelmode,json=usageInKernelmode" json:"usage_in_kernelmode,omitempty"`
+ 	UsageInUsermode   uint64   `protobuf:"varint,4,opt,name=usage_in_usermode,json=usageInUsermode" json:"usage_in_usermode,omitempty"`
+ }
+@@ -821,6 +827,10 @@ func init() {
+ var _ context.Context
+ var _ grpc.ClientConn
+ 
++// This is a compile-time assertion to ensure that this generated file
++// is compatible with the grpc package it is being compiled against.
++const _ = grpc.SupportPackageIsVersion3
++
+ // Client API for API service
+ 
+ type APIClient interface {
+@@ -987,112 +997,166 @@ func RegisterAPIServer(s *grpc.Server, s
+ 	s.RegisterService(&_API_serviceDesc, srv)
+ }
+ 
+-func _API_CreateContainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_CreateContainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(CreateContainerRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).CreateContainer(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).CreateContainer(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/CreateContainer",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).CreateContainer(ctx, req.(*CreateContainerRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+-func _API_UpdateContainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_UpdateContainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(UpdateContainerRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).UpdateContainer(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).UpdateContainer(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/UpdateContainer",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).UpdateContainer(ctx, req.(*UpdateContainerRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+-func _API_Signal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_Signal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(SignalRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).Signal(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).Signal(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/Signal",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).Signal(ctx, req.(*SignalRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+-func _API_UpdateProcess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_UpdateProcess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(UpdateProcessRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).UpdateProcess(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).UpdateProcess(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/UpdateProcess",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).UpdateProcess(ctx, req.(*UpdateProcessRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+-func _API_AddProcess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_AddProcess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(AddProcessRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).AddProcess(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).AddProcess(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/AddProcess",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).AddProcess(ctx, req.(*AddProcessRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+-func _API_CreateCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_CreateCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(CreateCheckpointRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).CreateCheckpoint(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).CreateCheckpoint(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/CreateCheckpoint",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).CreateCheckpoint(ctx, req.(*CreateCheckpointRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+-func _API_DeleteCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_DeleteCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(DeleteCheckpointRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).DeleteCheckpoint(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).DeleteCheckpoint(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/DeleteCheckpoint",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).DeleteCheckpoint(ctx, req.(*DeleteCheckpointRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+-func _API_ListCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_ListCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(ListCheckpointRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).ListCheckpoint(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).ListCheckpoint(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/ListCheckpoint",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).ListCheckpoint(ctx, req.(*ListCheckpointRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+-func _API_State_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_State_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(StateRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).State(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).State(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/State",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).State(ctx, req.(*StateRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+ func _API_Events_Handler(srv interface{}, stream grpc.ServerStream) error {
+@@ -1116,16 +1180,22 @@ func (x *aPIEventsServer) Send(m *Event)
+ 	return x.ServerStream.SendMsg(m)
+ }
+ 
+-func _API_Stats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
++func _API_Stats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+ 	in := new(StatsRequest)
+ 	if err := dec(in); err != nil {
+ 		return nil, err
+ 	}
+-	out, err := srv.(APIServer).Stats(ctx, in)
+-	if err != nil {
+-		return nil, err
++	if interceptor == nil {
++		return srv.(APIServer).Stats(ctx, in)
+ 	}
+-	return out, nil
++	info := &grpc.UnaryServerInfo{
++		Server:     srv,
++		FullMethod: "/types.API/Stats",
++	}
++	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
++		return srv.(APIServer).Stats(ctx, req.(*StatsRequest))
++	}
++	return interceptor(ctx, in, info, handler)
+ }
+ 
+ var _API_serviceDesc = grpc.ServiceDesc{
+@@ -1180,8 +1250,11 @@ var _API_serviceDesc = grpc.ServiceDesc{
+ 			ServerStreams: true,
+ 		},
+ 	},
++	Metadata: fileDescriptor0,
+ }
+ 
++func init() { proto.RegisterFile("api.proto", fileDescriptor0) }
++
+ var fileDescriptor0 = []byte{
+ 	// 2212 bytes of a gzipped FileDescriptorProto
+ 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xec, 0x39, 0x4b, 0x73, 0x1c, 0x49,
