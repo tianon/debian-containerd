@@ -1,7 +1,7 @@
 containerd (0.2.1~ds1-3) unstable; urgency=medium
 
   [ Team upload ]
-  * Rebuild proto files against newer version of grpc to fix FTBFS.
+  * Rebuild proto files against newer version of grpc (Closes: #835736)
 
  -- Tim Potter <tpot@hpe.com>  Fri, 09 Sep 2016 10:11:54 +1000
 
