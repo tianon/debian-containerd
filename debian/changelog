@@ -1,3 +1,9 @@
+containerd (0.2.5-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Update to 0.2.5 upstream release
+
+ -- Tianon Gravi <tianon@debian.org>  Thu, 12 Jan 2017 09:42:03 -0800
+
 containerd (0.2.3-0ubuntu1) yakkety; urgency=medium
 
   * Update to 0.2.3 upstream release
