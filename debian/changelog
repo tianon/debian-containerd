@@ -1,3 +1,9 @@
+containerd (1.2.2-0~ubuntu1) UNRELEASED; urgency=medium
+
+  * Update to 1.2.2 upstream release
+
+ -- Tianon Gravi <tianon@debian.org>  Thu, 17 Jan 2019 15:40:26 -0800
+
 containerd (0.2.5-0ubuntu2) artful; urgency=medium
 
   * No change rebuild to fix miscompilation on ppc64el. (LP: #1711935) 

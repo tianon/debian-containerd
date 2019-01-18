@@ -1,39 +1,32 @@
 #!/usr/bin/make -f
 
-# there's Go code in hack/ but nothing we should test/ship
-export DH_GOLANG_EXCLUDES := \
-	github.com/docker/containerd/hack \
-	github.com/docker/containerd/integration-test \
-	vendor
-
-# set DH_GOPKG for older dh-golang (backports)
-export DH_GOPKG := github.com/docker/containerd
-
-# prefer Go 1.6 if it's available (golang-1.6-go)
-export PATH := /usr/lib/go-1.6/bin:$(PATH)
+# temporary build path (see http://golang.org/doc/code.html#GOPATH)
+OUR_GOPATH := $(CURDIR)/.gopath
+export GOPATH := $(OUR_GOPATH)
 
 override_dh_auto_configure:
-	dh_auto_configure
-	# use vendored deps
-	rm -r '_build/src/$(DH_GOPKG)/vendor' \
-		&& mkdir '_build/src/$(DH_GOPKG)/vendor' \
-		&& cd vendor/src \
-		&& cp -r . '$(CURDIR)/_build/src/$(DH_GOPKG)/vendor'
-
-# The go tool does not fully support vendoring with gccgo, but we can
-# work around that by constructing the appropriate -I flag by hand.
-GCCGO := $(shell go tool dist env > /dev/null 2>&1 && echo no || echo yes)
-
-ifeq ($(GCCGO),yes)
-GOARCH := $(shell go env GOARCH)
-GOOS := $(shell go env GOOS)
+	# copy pristine source for "/usr/share/gocode" to get into "golang-github-containerd-containerd-dev" before we muddy it with build artifacts, etc
+	mkdir -p .pristine-source
+	tar -c --exclude=debian . | tar -xC .pristine-source
+	# set up GOPATH symlink farm
+	mkdir -p '$(OUR_GOPATH)/src/github.com/containerd'
+	ln -sfT '$(CURDIR)' '$(OUR_GOPATH)/src/github.com/containerd/containerd'
 
 override_dh_auto_build:
-	dh_auto_build -- -gccgoflags="-I $(CURDIR)/_build/pkg/gccgo_$(GOOS)_$(GOARCH)/$(DH_GOPKG)/vendor"
+	cd '$(OUR_GOPATH)/src/github.com/containerd/containerd' \
+		&& make \
+			LDFLAGS='' \
+			VERSION='$(shell dpkg-parsechangelog -SVersion)' \
+			REVISION=''
 
 override_dh_auto_test:
-	dh_auto_test -- -gccgoflags="-I $(CURDIR)/_build/pkg/gccgo_$(GOOS)_$(GOARCH)/$(DH_GOPKG)/vendor"
-endif
+	cd '$(OUR_GOPATH)/src/github.com/containerd/containerd' && make test
+
+override_dh_auto_install:
+	make install \
+		DESTDIR='$(CURDIR)/debian/tmp/usr'
+	mkdir -p debian/tmp/usr/share/gocode/src/github.com/containerd \
+		&& mv .pristine-source debian/tmp/usr/share/gocode/src/github.com/containerd/containerd
 
 %:
-	dh $@ --buildsystem=golang --with=golang --builddirectory=_build
+	dh $@ --with=systemd

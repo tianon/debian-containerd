@@ -5,10 +5,13 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Debian Go Packaging Team <pkg-go-maintainers@lists.alioth.debian.org>
 Uploaders: Tianon Gravi <tianon@debian.org>
 Build-Depends: debhelper (>= 9),
-               dh-golang,
-               golang-go (>= 2:1.6~) | golang-1.6-go
+               golang-go (>= 2:1.10~),
+               golang-race-detector-runtime,
+               libbtrfs-dev | btrfs-progs (<< 4.16.1~),
+               libseccomp-dev,
+               pkg-config
 Standards-Version: 3.9.7
-Homepage: https://containerd.tools
+Homepage: https://containerd.io
 Vcs-Git: https://anonscm.debian.org/git/pkg-go/packages/containerd.git
 Vcs-Browser: https://anonscm.debian.org/cgit/pkg-go/packages/containerd.git
 XS-Go-Import-Path: github.com/docker/containerd
