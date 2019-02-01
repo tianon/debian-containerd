@@ -7,7 +7,7 @@ export GOPATH := $(OUR_GOPATH)
 override_dh_auto_configure:
 	# copy pristine source for "/usr/share/gocode" to get into "golang-github-containerd-containerd-dev" before we muddy it with build artifacts, etc
 	mkdir -p .pristine-source
-	tar -c --exclude=debian . | tar -xC .pristine-source
+	tar -c --exclude=debian --exclude=.pc --exclude=.pristine-source . | tar -xC .pristine-source
 	# set up GOPATH symlink farm
 	mkdir -p '$(OUR_GOPATH)/src/github.com/containerd'
 	ln -sfT '$(CURDIR)' '$(OUR_GOPATH)/src/github.com/containerd/containerd'
