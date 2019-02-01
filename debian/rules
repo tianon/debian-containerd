@@ -17,14 +17,15 @@ override_dh_auto_build:
 		&& make \
 			LDFLAGS='' \
 			VERSION='$(shell dpkg-parsechangelog -SVersion)' \
-			REVISION=''
+			REVISION='' \
+		&& make man
 
 override_dh_auto_test:
 	cd '$(OUR_GOPATH)/src/github.com/containerd/containerd' && make test
 
 override_dh_auto_install:
-	make install \
-		DESTDIR='$(CURDIR)/debian/tmp/usr'
+	make install DESTDIR='$(CURDIR)/debian/tmp/usr'
+	make install-man DESTDIR='$(CURDIR)/debian/tmp/usr/share'
 	mkdir -p debian/tmp/usr/share/gocode/src/github.com/containerd \
 		&& mv .pristine-source debian/tmp/usr/share/gocode/src/github.com/containerd/containerd
 
