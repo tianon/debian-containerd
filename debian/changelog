@@ -1,4 +1,4 @@
-containerd (1.2.2-0~ubuntu1) UNRELEASED; urgency=medium
+containerd (1.2.2-0ubuntu1) disco; urgency=medium
 
   * Update to 1.2.2 upstream release
 
