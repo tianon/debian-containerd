@@ -1,4 +1,4 @@
-containerd (1.2.2-0ubuntu2) UNRELEASED; urgency=medium
+containerd (1.2.2-0ubuntu2) disco; urgency=medium
 
   * Update "golang-race-detector-runtime" Build-Depends to be amd64-only
 
