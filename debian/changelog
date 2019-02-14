@@ -1,3 +1,9 @@
+containerd (1.2.2-0ubuntu3) UNRELEASED; urgency=medium
+
+  * Add available docs to containerd package
+
+ -- Tianon Gravi <tianon@debian.org>  Thu, 14 Feb 2019 14:26:03 -0800
+
 containerd (1.2.2-0ubuntu2) disco; urgency=medium
 
   * Update "golang-race-detector-runtime" Build-Depends to be amd64-only
