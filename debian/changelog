@@ -1,4 +1,4 @@
-containerd (1.2.2-0ubuntu3) UNRELEASED; urgency=medium
+containerd (1.2.2-0ubuntu3) disco; urgency=medium
 
   * Add available docs to containerd package
   * Add "basic-smoke" autopkgtest to verify basic functionality
