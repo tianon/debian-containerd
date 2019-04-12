@@ -1,8 +1,8 @@
-containerd (1.2.6-0ubuntu1) UNRELEASED; urgency=medium
+containerd (1.2.6-0ubuntu1) disco; urgency=medium
 
   * New upstream release.
 
- -- Michael Hudson-Doyle <michael.hudson@ubuntu.com>  Fri, 12 Apr 2019 11:35:58 +1200
+ -- Michael Hudson-Doyle <michael.hudson@ubuntu.com>  Fri, 12 Apr 2019 12:28:52 +1200
 
 containerd (1.2.5-0ubuntu1) disco; urgency=medium
 
