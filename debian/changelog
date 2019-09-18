@@ -1,6 +1,7 @@
 containerd (1.2.9-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * Set GOCACHE to a safely-writeable directory during build.
 
  -- Michael Hudson-Doyle <michael.hudson@ubuntu.com>  Wed, 18 Sep 2019 09:32:40 +0200
 
