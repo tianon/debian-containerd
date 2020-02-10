@@ -1,0 +1,10 @@
+--- a/Makefile
++++ b/Makefile
+@@ -52,7 +52,6 @@
+ endif
+ 
+ ifndef GODEBUG
+-	EXTRA_LDFLAGS += -s -w
+ 	DEBUG_GO_GCFLAGS :=
+ 	DEBUG_TAGS :=
+ else
