@@ -13,8 +13,8 @@ Build-Depends: debhelper (>= 9),
                pkg-config
 Standards-Version: 3.9.7
 Homepage: https://containerd.io
-Vcs-Git: https://anonscm.debian.org/git/pkg-go/packages/containerd.git
-Vcs-Browser: https://anonscm.debian.org/cgit/pkg-go/packages/containerd.git
+Vcs-Git: https://github.com/tianon/debian-containerd.git -b ubuntu
+Vcs-Browser: https://github.com/tianon/debian-containerd/tree/ubuntu
 XS-Go-Import-Path: github.com/docker/containerd
 
 Package: containerd
