@@ -1,0 +1,19 @@
+Description: Fix FTBFS on riscv64
+ riscv64 does not support -buildmode=pie option.
+Author: Lucas Kanashiro <kanashiro@ubuntu.com>
+Forwarded: https://github.com/containerd/containerd/pull/4277
+Last-Updated: 2020-05-20
+
+--- a/Makefile.linux
++++ b/Makefile.linux
+@@ -20,7 +20,9 @@
+ 
+ # check GOOS for cross compile builds
+ ifeq ($(GOOS),linux)
+-	GO_GCFLAGS += -buildmode=pie
++	ifneq ($(GOARCH),riscv64)
++		GO_GCFLAGS += -buildmode=pie
++	endif
+ endif
+ 
+ # amd64 supports go test -race
