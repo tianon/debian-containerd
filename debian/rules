@@ -7,6 +7,13 @@ OUR_GOPATH := $(CURDIR)/.gopath
 export GOPATH := $(OUR_GOPATH)
 export GOCACHE := $(CURDIR)/.gocache
 
+# riscv64 doesn't support cgo
+# https://github.com/golang/go/issues/36641
+ifeq (0, $(shell go env CGO_ENABLED))
+TAGS += no_btrfs
+SKIP += github.com/containerd/containerd/snapshots/btrfs
+endif
+
 override_dh_auto_configure:
 	# copy pristine source for "/usr/share/gocode" to get into "golang-github-containerd-containerd-dev" before we muddy it with build artifacts, etc
 	mkdir -p .pristine-source
@@ -21,11 +28,12 @@ override_dh_auto_build:
 			LDFLAGS='' \
 			VERSION='$(shell dpkg-parsechangelog -SVersion)' \
 			REVISION='' \
+			BUILDTAGS='$(TAGS)' \
 		&& make man
 
 override_dh_auto_test:
 ifneq (arm, $(DEB_HOST_ARCH_CPU)) # skip the tests on armhf ("--- FAIL: TestParseSelector/linux (0.00s)  platforms_test.go:292: arm support not fully implemented: not implemented")
-	cd '$(OUR_GOPATH)/src/github.com/containerd/containerd' && make test
+	cd '$(OUR_GOPATH)/src/github.com/containerd/containerd' && make test SKIPTESTS='$(SKIP)'
 endif
 
 override_dh_auto_install:
