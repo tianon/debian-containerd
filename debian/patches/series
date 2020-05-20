@@ -1,2 +1,3 @@
 preserve-debug-info.patch
 4134-update-etcd-bbolt.patch
+4277-fix-build-on-riscv64.patch

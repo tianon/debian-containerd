@@ -9,7 +9,7 @@ export GOCACHE := $(CURDIR)/.gocache
 
 # riscv64 doesn't support cgo
 # https://github.com/golang/go/issues/36641
-ifeq (0, $(shell go env CGO_ENABLED))
+ifeq (riscv64, $(DEB_BUILD_ARCH))
 TAGS += no_btrfs
 SKIP += github.com/containerd/containerd/snapshots/btrfs
 endif
