@@ -1,4 +1,4 @@
-containerd (1.3.4-0ubuntu2) UNRELEASED; urgency=medium
+containerd (1.3.4-0ubuntu2) groovy; urgency=medium
 
   * Add a patch to not use -buildmode=pie on riscv64
   * d/rules: check for DEB_BUILD_ARCH to set variables to build on riscv64
