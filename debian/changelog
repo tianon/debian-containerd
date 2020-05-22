@@ -1,4 +1,4 @@
-containerd (1.3.4-0ubuntu3) UNRELEASED; urgency=medium
+containerd (1.3.4-0ubuntu3) groovy; urgency=medium
 
   * Add a patch to fix the gc/scheduler flaky test on riscv64
 
