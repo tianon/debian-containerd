@@ -15,7 +15,7 @@ Standards-Version: 3.9.7
 Homepage: https://containerd.io
 Vcs-Git: https://github.com/tianon/debian-containerd.git -b ubuntu
 Vcs-Browser: https://github.com/tianon/debian-containerd/tree/ubuntu
-XS-Go-Import-Path: github.com/docker/containerd
+XS-Go-Import-Path: github.com/containerd/containerd
 
 Package: containerd
 Architecture: linux-any
@@ -29,7 +29,7 @@ Description: daemon to control runC
  .
  This package contains the binaries.
 
-Package: golang-github-docker-containerd-dev
+Package: golang-github-containerd-containerd-dev
 Architecture: all
 Depends: ${misc:Depends}
 Description: runC develpoment files
