@@ -1,3 +1,9 @@
+containerd (1.3.4-0ubuntu5) groovy; urgency=medium
+
+  * Rename install file to match the new binary package name
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 01 Jun 2020 09:51:41 -0300
+
 containerd (1.3.4-0ubuntu4) groovy; urgency=medium
 
   * d/control: rename binary package with dev files and update
