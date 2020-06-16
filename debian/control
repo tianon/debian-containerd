@@ -7,7 +7,6 @@ Uploaders: Tianon Gravi <tianon@debian.org>
 Build-Depends: debhelper (>= 9),
                go-md2man,
                golang-go (>= 2:1.10~),
-               golang-race-detector-runtime [amd64],
                libbtrfs-dev | btrfs-progs (<< 4.16.1~),
                libseccomp-dev,
                pkg-config
