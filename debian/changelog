@@ -1,6 +1,11 @@
 containerd (1.4.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release.
+    - Drop patches applied by upstream:
+      + d/p/4134-update-etcd-bbolt.patch
+      + d/p/4277-fix-build-on-riscv64.patch
+      + d/p/e859b8a-gc-increase-sleep-time-in-test.patch
+    - Update the copyright file
 
  -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 18 Aug 2020 15:12:33 -0300
 
