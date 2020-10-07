@@ -14,6 +14,13 @@ TAGS += no_btrfs
 SKIP += github.com/containerd/containerd/snapshots/btrfs
 endif
 
+# build explicitly against Go 1.13 (for now):
+#   https://github.com/containerd/containerd/issues/4509
+#   https://github.com/containerd/containerd/pull/4050
+#   https://github.com/golang/go/issues/37942
+# (containerd 1.4+ and Go 1.15+ can go back to "golang-go")
+export PATH := /usr/lib/go-1.13/bin:$(PATH)
+
 override_dh_auto_configure:
 	# copy pristine source for "/usr/share/gocode" to get into "golang-github-containerd-containerd-dev" before we muddy it with build artifacts, etc
 	mkdir -p .pristine-source
