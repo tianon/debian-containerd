@@ -1,6 +1,7 @@
 containerd (1.3.7-0ubuntu2) UNRELEASED; urgency=medium
 
   * Build using Go 1.13 (per upstream)
+  * Use dh-golang to generate appropriate Built-Using
 
  -- Tianon Gravi <tianon@debian.org>  Wed, 07 Oct 2020 14:19:43 -0700
 

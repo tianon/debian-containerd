@@ -21,6 +21,19 @@ endif
 # (containerd 1.4+ and Go 1.15+ can go back to "golang-go")
 export PATH := /usr/lib/go-1.13/bin:$(PATH)
 
+override_dh_gencontrol:
+	# use "dh_golang" to generate "misc:Built-Using" (via "go list")
+	DH_GOLANG_BUILDPKG=' \
+		-tags "$(TAGS)" \
+		github.com/containerd/containerd/cmd/containerd \
+		github.com/containerd/containerd/cmd/containerd-shim \
+		github.com/containerd/containerd/cmd/containerd-shim-runc-v1 \
+		github.com/containerd/containerd/cmd/containerd-shim-runc-v2 \
+		github.com/containerd/containerd/cmd/containerd-stress \
+		github.com/containerd/containerd/cmd/ctr \
+	' dh_golang --builddirectory='$(OUR_GOPATH:$(CURDIR)/%=%)'
+	dh_gencontrol
+
 override_dh_auto_configure:
 	# copy pristine source for "/usr/share/gocode" to get into "golang-github-containerd-containerd-dev" before we muddy it with build artifacts, etc
 	mkdir -p .pristine-source
