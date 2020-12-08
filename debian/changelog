@@ -1,4 +1,4 @@
-containerd (1.3.7-0ubuntu4) UNRELEASED; urgency=medium
+containerd (1.3.7-0ubuntu4) hirsute; urgency=medium
 
   * d/control: add a Breaks for docker.io lower than 19.03.13-0ubuntu4.
     See LP #1870514. The previous versions stop the docker daemon when a
