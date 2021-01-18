@@ -1,3 +1,16 @@
+containerd (1.4.3-0ubuntu1) hirsute; urgency=medium
+
+  * New upstream release.
+  * Drop patches applied by upstream.
+    - d/p/4134-update-etcd-bbolt.patch
+    - d/p/4277-fix-build-on-riscv64.patch
+    - d/p/e859b8a-gc-increase-sleep-time-in-test.patch
+    - d/p/CVE-2020-15257.patch
+  * Update the copyright file.
+  * Build depend on default Golang version in all architectures.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 12 Jan 2021 18:45:18 -0300
+
 containerd (1.3.7-0ubuntu5) hirsute; urgency=medium
 
   * d/control: add a Breaks for docker.io lower than 19.03.13-0ubuntu4.
