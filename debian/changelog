@@ -3,6 +3,12 @@ containerd (1.4.4-0ubuntu1) UNRELEASED; urgency=medium
   * New upstream release.
     - It contains a fix for CVE-2021-21334 along with various other minor
       issues.
+  * Refresh preserve-debug-info.patch
+  * d/rules: set GO111MODULE to auto. In Go 1.16, which is the default in
+    Hirsute now, the packages are built in module-aware mode. Since containerd
+    does not have a go.mod file in its source tree it FTBFS. Setting GO111MODULE
+    to auto we can have the previous behavior which is enable module-aware mode
+    only if the go.mod file exists.
 
  -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 10 Mar 2021 11:45:18 -0300
 
