@@ -1,3 +1,14 @@
+containerd (1.3.3-0ubuntu1~18.04.3) bionic-security; urgency=medium
+
+  * SECURITY UPDATE: Elevation of privilege vulnerability
+    - debian/patches/CVE-2020-15257.patch: Use path based unix socket for shims
+      and use path-based unix socket for containerd-shim.
+    - debian/control: Remove libbtrfs-dev from build dependency since it's not
+      available in Bionic.
+    - CVE-2020-15257
+
+ -- Paulo Flabiano Smorigo <pfsmorigo@canonical.com>  Thu, 26 Nov 2020 18:12:09 +0000
+
 containerd (1.3.3-0ubuntu1~18.04.2) bionic; urgency=high
 
   * d/p/0001-Improve-host-fallback-behaviour-in-docker-remote.patch:
