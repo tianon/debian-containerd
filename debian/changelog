@@ -1,3 +1,10 @@
+containerd (1.3.3-0ubuntu1~18.04.2) bionic; urgency=high
+
+  * d/p/0001-Improve-host-fallback-behaviour-in-docker-remote.patch:
+    Fixes regression introduced in 1.3.3 update (LP: #1867398)
+
+ -- Jorge Niedbalski <jorge.niedbalski@canonical.com>  Thu, 19 Mar 2020 23:13:11 -0300
+
 containerd (1.3.3-0ubuntu1~18.04.1) bionic; urgency=medium
 
   * Backport to Bionic. (LP: #1854841)
