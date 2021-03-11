@@ -1,3 +1,12 @@
+containerd (1.3.7-0ubuntu3.2) groovy; urgency=medium
+
+  * d/control: add a Breaks for docker.io lower than 19.03.13-0ubuntu3.1
+    (LP: #1870514). The previous versions stop the docker daemon when a
+    containerd update is performed, this Breaks statement will make sure we
+    have a newer version which has the appropriate fix.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 11 Dec 2020 09:19:07 -0300
+
 containerd (1.3.7-0ubuntu3.1) groovy-security; urgency=medium
 
   * SECURITY UPDATE: Elevation of privilege vulnerability
