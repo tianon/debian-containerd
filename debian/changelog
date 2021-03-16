@@ -1,6 +1,7 @@
 containerd (1.4.4-0ubuntu1~20.10.1) UNRELEASED; urgency=medium
 
   * Backport version 1.4.4-0ubuntu1 from Hirsute (LP: #1919322).
+    - d/control: update Breaks docker.io version to match version in Groovy.
 
  -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 16 Mar 2021 18:26:07 -0300
 
