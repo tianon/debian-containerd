@@ -1,20 +1,47 @@
-containerd (1.3.7-0ubuntu3.2) groovy; urgency=medium
+containerd (1.4.4-0ubuntu1) hirsute; urgency=medium
 
-  * d/control: add a Breaks for docker.io lower than 19.03.13-0ubuntu3.1
-    (LP: #1870514). The previous versions stop the docker daemon when a
+  * New upstream release.
+    - It contains a fix for CVE-2021-21334 along with various other minor
+      issues.
+  * Refresh preserve-debug-info.patch
+  * d/rules: set GO111MODULE to auto. In Go 1.16, which is the default in
+    Hirsute now, the packages are built in module-aware mode. Since containerd
+    does not have a go.mod file in its source tree it FTBFS. Setting GO111MODULE
+    to auto we can have the previous behavior which is enable module-aware mode
+    only if the go.mod file exists.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 10 Mar 2021 11:45:18 -0300
+
+containerd (1.4.3-0ubuntu1) hirsute; urgency=medium
+
+  * New upstream release.
+  * Drop patches applied by upstream.
+    - d/p/4134-update-etcd-bbolt.patch
+    - d/p/4277-fix-build-on-riscv64.patch
+    - d/p/e859b8a-gc-increase-sleep-time-in-test.patch
+    - d/p/CVE-2020-15257.patch
+  * Update the copyright file.
+  * Build depend on default Golang version in all architectures.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 12 Jan 2021 18:45:18 -0300
+
+containerd (1.3.7-0ubuntu5) hirsute; urgency=medium
+
+  * d/control: add a Breaks for docker.io lower than 19.03.13-0ubuntu4.
+    See LP #1870514. The previous versions stop the docker daemon when a
     containerd update is performed, this Breaks statement will make sure we
     have a newer version which has the appropriate fix.
 
- -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 11 Dec 2020 09:19:07 -0300
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 07 Dec 2020 16:33:03 -0300
 
-containerd (1.3.7-0ubuntu3.1) groovy-security; urgency=medium
+containerd (1.3.7-0ubuntu4) hirsute; urgency=medium
 
   * SECURITY UPDATE: Elevation of privilege vulnerability
     - debian/patches/CVE-2020-15257.patch: Use path based unix socket for shims
       and use path-based unix socket for containerd-shim.
     - CVE-2020-15257
 
- -- Paulo Flabiano Smorigo <pfsmorigo@canonical.com>  Wed, 25 Nov 2020 17:51:57 +0000
+ -- Paulo Flabiano Smorigo <pfsmorigo@canonical.com>  Thu, 26 Nov 2020 17:35:23 +0000
 
 containerd (1.3.7-0ubuntu3) groovy; urgency=medium
 
