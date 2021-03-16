@@ -5,22 +5,22 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Debian Go Packaging Team <pkg-go-maintainers@lists.alioth.debian.org>
 Uploaders: Tianon Gravi <tianon@debian.org>
 Build-Depends: debhelper (>= 9),
+               dh-golang,
                go-md2man,
-               golang-go (>= 2:1.10~),
-               golang-race-detector-runtime [amd64],
+               golang-go,
                libbtrfs-dev | btrfs-progs (<< 4.16.1~),
                libseccomp-dev,
                pkg-config
 Standards-Version: 3.9.7
 Homepage: https://containerd.io
-Vcs-Git: https://anonscm.debian.org/git/pkg-go/packages/containerd.git
-Vcs-Browser: https://anonscm.debian.org/cgit/pkg-go/packages/containerd.git
-XS-Go-Import-Path: github.com/docker/containerd
+Vcs-Git: https://github.com/tianon/debian-containerd.git -b ubuntu
+Vcs-Browser: https://github.com/tianon/debian-containerd/tree/ubuntu
+XS-Go-Import-Path: github.com/containerd/containerd
 
 Package: containerd
 Architecture: linux-any
 Depends: runc (>= 1.0.0~rc2~), ${misc:Depends}, ${shlibs:Depends}
-Breaks: docker.io (<< 19.03.8-0ubuntu1.20.04.2)
+Breaks: docker.io (<< 19.03.13-0ubuntu4)
 Built-Using: ${misc:Built-Using}
 Description: daemon to control runC
  Containerd is a daemon to control runC, built for performance and density.
@@ -30,7 +30,7 @@ Description: daemon to control runC
  .
  This package contains the binaries.
 
-Package: golang-github-docker-containerd-dev
+Package: golang-github-containerd-containerd-dev
 Architecture: all
 Depends: ${misc:Depends}
 Description: runC develpoment files
