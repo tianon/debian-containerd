@@ -1,4 +1,4 @@
-containerd (1.4.4-0ubuntu1~20.04.1) UNRELEASED; urgency=medium
+containerd (1.4.4-0ubuntu1~20.04.1) focal; urgency=medium
 
   * Backport version 1.4.4-0ubuntu1 from Hirsute (LP: #1919322).
     - d/control: update Breaks docker.io version to match version in Focal.
