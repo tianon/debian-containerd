@@ -40,3 +40,12 @@ Description: runC develpoment files
  migration of containers.
  .
  This package provides development files.
+
+Package: golang-github-docker-containerd-dev
+Section: oldlibs
+Priority: optional
+Architecture: all
+Depends: golang-github-containerd-containerd-dev, ${misc:Depends}
+Description: Transitional package for golang-github-containerd-containerd-dev
+ This is a transitional package to ease upgrades to the
+ golang-github-containerd-containerd-dev package. It can safely be removed.
