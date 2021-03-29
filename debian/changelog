@@ -1,3 +1,10 @@
+containerd (1.4.4-0ubuntu1~20.04.2) focal; urgency=medium
+
+  * d/control: Create transitional package golang-github-docker-containerd-dev
+    for golang-github-containerd-containerd-dev.
+
+ -- Sergio Durigan Junior <sergio.durigan@canonical.com>  Mon, 29 Mar 2021 14:41:57 -0400
+
 containerd (1.4.4-0ubuntu1~20.04.1) focal; urgency=medium
 
   * Backport version 1.4.4-0ubuntu1 from Hirsute (LP: #1919322).
