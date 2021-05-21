@@ -1,6 +1,10 @@
 containerd (1.5.2-0ubuntu1~20.04.1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * d/p/skip-tests-with-privilege.patch: add a patch to skip tests which
+    require a certain level of privilege not achievable in the build
+    environment.
+  * d/rules: set GO111MODULE variable to off to avoid Internet connection.
 
  -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 21 May 2021 17:11:42 -0300
 
