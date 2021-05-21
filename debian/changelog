@@ -1,3 +1,9 @@
+containerd (1.5.2-0ubuntu1~20.04.1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 21 May 2021 17:11:42 -0300
+
 containerd (1.4.4-0ubuntu1~20.04.2) focal; urgency=medium
 
   * d/control: Create transitional package golang-github-docker-containerd-dev
