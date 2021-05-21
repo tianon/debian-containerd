@@ -1,3 +1,9 @@
+containerd (1.5.2-0ubuntu1~20.10.1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 21 May 2021 17:02:23 -0300
+
 containerd (1.4.4-0ubuntu1~20.10.1) groovy; urgency=medium
 
   * Backport version 1.4.4-0ubuntu1 from Hirsute (LP: #1919322).
