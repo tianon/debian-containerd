@@ -1,6 +1,9 @@
 containerd (1.5.2-0ubuntu1~21.04.1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * d/p/skip-tests-with-privilege.patch: add a patch to skip tests which
+    require a certain level of privilege not achievable in the build
+    environment.
 
  -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 21 May 2021 16:48:34 -0300
 
