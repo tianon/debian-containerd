@@ -8,7 +8,8 @@ export GOPATH := $(OUR_GOPATH)
 export GOCACHE := $(CURDIR)/.gocache
 
 # https://blog.golang.org/go116-module-changes (TODO figure out a new solution for Go 1.17+)
-export GO111MODULE := auto
+# GO111MODULE needs to be set to "off" to avoid checking modules information online
+export GO111MODULE := off
 
 # riscv64 doesn't support cgo
 # https://github.com/golang/go/issues/36641
