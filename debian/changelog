@@ -1,3 +1,12 @@
+containerd (1.5.2-0ubuntu1~20.10.1) groovy; urgency=medium
+
+  * New upstream release, backport from Impish (LP: #1931464).
+  * d/p/skip-tests-with-privilege.patch: add a patch to skip tests which
+    require a certain level of privilege not achievable in the build
+    environment.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 21 May 2021 17:02:23 -0300
+
 containerd (1.4.4-0ubuntu1~20.10.1) groovy; urgency=medium
 
   * Backport version 1.4.4-0ubuntu1 from Hirsute (LP: #1919322).
