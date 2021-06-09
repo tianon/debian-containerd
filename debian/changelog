@@ -1,4 +1,4 @@
-containerd (1.5.2-0ubuntu1~20.10.1) UNRELEASED; urgency=medium
+containerd (1.5.2-0ubuntu1~20.10.1) groovy; urgency=medium
 
   * New upstream release, backport from Impish (LP: #1931464).
   * d/p/skip-tests-with-privilege.patch: add a patch to skip tests which
