@@ -1,6 +1,6 @@
 containerd (1.5.2-0ubuntu1~20.10.1) UNRELEASED; urgency=medium
 
-  * New upstream release.
+  * New upstream release, backport from Impish (LP: #1931464).
   * d/p/skip-tests-with-privilege.patch: add a patch to skip tests which
     require a certain level of privilege not achievable in the build
     environment.
