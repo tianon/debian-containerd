@@ -1,3 +1,9 @@
+containerd (1.5.5-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 04 Aug 2021 17:03:58 -0300
+
 containerd (1.5.2-0ubuntu1) impish; urgency=medium
 
   * New upstream release.
