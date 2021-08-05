@@ -1,4 +1,4 @@
-containerd (1.5.5-0ubuntu1) UNRELEASED; urgency=medium
+containerd (1.5.5-0ubuntu1) impish; urgency=medium
 
   * New upstream release.
   * Bump debhelper compatibility level to 11.
