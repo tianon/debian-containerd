@@ -1,3 +1,12 @@
+containerd (1.5.5-0ubuntu1) impish; urgency=medium
+
+  * New upstream release.
+  * Bump debhelper compatibility level to 11.
+    - d/rules: remove the unneeded --with=systemd from the dh call.
+    - d/rules: override dh_installsystemd instead of dh_installinit.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 04 Aug 2021 17:37:16 -0300
+
 containerd (1.5.2-0ubuntu1) impish; urgency=medium
 
   * New upstream release.
