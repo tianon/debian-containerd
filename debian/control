@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 11),
                dh-golang,
                go-md2man,
                golang-go,
-               libbtrfs-dev | btrfs-progs (<< 4.16.1~),
+               btrfs-progs (<< 4.16.1~),
                libseccomp-dev,
                pkg-config
 Standards-Version: 3.9.7
