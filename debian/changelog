@@ -1,3 +1,11 @@
+containerd (1.5.5-0ubuntu2~20.04.1) UNRELEASED; urgency=medium
+
+  * Backport version 1.5.5-0ubuntu2 from Impish (LP: #1938908).
+    - d/rules: set GO111MODULE to off, this avoid Internet connection during
+      the build.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 21 Sep 2021 17:30:04 -0300
+
 containerd (1.5.5-0ubuntu2) impish; urgency=medium
 
   * d/p/seccomp-support-clone3-syscall.patch: clone3 is explicitly requested
