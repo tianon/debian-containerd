@@ -8,8 +8,7 @@ export GOPATH := $(OUR_GOPATH)
 export GOCACHE := $(CURDIR)/.gocache
 
 # https://blog.golang.org/go116-module-changes (TODO figure out a new solution for Go 1.17+)
-# GO111MODULE needs to be set to "off" to avoid checking modules information online
-export GO111MODULE := off
+export GO111MODULE := auto
 
 # riscv64 doesn't support cgo
 # https://github.com/golang/go/issues/36641
@@ -66,12 +65,12 @@ override_dh_auto_install:
 	mkdir -p debian/tmp/usr/share/gocode/src/github.com/containerd \
 		&& mv .pristine-source debian/tmp/usr/share/gocode/src/github.com/containerd/containerd
 
-override_dh_installinit:
-	dh_installinit
+override_dh_installsystemd:
+	dh_installsystemd
 	# replace "/usr/local/bin/containerd" with "/usr/bin/containerd" in our systemd service file
 	grep '/usr/local/bin/containerd' debian/*/lib/systemd/system/containerd.service \
 		&& sed -i 's!/usr/local/bin/containerd!/usr/bin/containerd!g' debian/*/lib/systemd/system/containerd.service \
 		&& ! grep '/usr/local/bin/containerd' debian/*/lib/systemd/system/containerd.service
 
 %:
-	dh $@ --with=systemd
+	dh $@
