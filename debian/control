@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Debian Go Packaging Team <pkg-go-maintainers@lists.alioth.debian.org>
 Uploaders: Tianon Gravi <tianon@debian.org>
-Build-Depends: debhelper (>= 9),
+Build-Depends: debhelper (>= 11),
                dh-golang,
                go-md2man,
                golang-go,

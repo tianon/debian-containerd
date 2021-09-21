@@ -1,11 +1,28 @@
-containerd (1.5.2-0ubuntu1~21.04.1) hirsute; urgency=medium
+containerd (1.5.5-0ubuntu2) impish; urgency=medium
 
-  * New upstream release, backport from Impish (LP: #1931464).
+  * d/p/seccomp-support-clone3-syscall.patch: clone3 is explicitly requested
+    to give ENOSYS instead of the default EPERM, when CAP_SYS_ADMIN is unset.
+    (LP: #1943049).
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 14 Sep 2021 11:45:36 -0300
+
+containerd (1.5.5-0ubuntu1) impish; urgency=medium
+
+  * New upstream release.
+  * Bump debhelper compatibility level to 11.
+    - d/rules: remove the unneeded --with=systemd from the dh call.
+    - d/rules: override dh_installsystemd instead of dh_installinit.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 04 Aug 2021 17:37:16 -0300
+
+containerd (1.5.2-0ubuntu1) impish; urgency=medium
+
+  * New upstream release.
   * d/p/skip-tests-with-privilege.patch: add a patch to skip tests which
     require a certain level of privilege not achievable in the build
     environment.
 
- -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 21 May 2021 16:48:34 -0300
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Thu, 20 May 2021 15:55:04 -0300
 
 containerd (1.4.4-0ubuntu1) hirsute; urgency=medium
 
