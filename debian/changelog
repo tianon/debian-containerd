@@ -1,4 +1,4 @@
-containerd (1.5.5-0ubuntu2~21.04.1) UNRELEASED; urgency=medium
+containerd (1.5.5-0ubuntu2~21.04.1) hirsute; urgency=medium
 
   * Backport version 1.5.5-0ubuntu2 from Impish (LP: #1938908).
 
