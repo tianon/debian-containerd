@@ -1,4 +1,4 @@
-containerd (1.5.5-0ubuntu3~18.04.1) UNRELEASED; urgency=medium
+containerd (1.5.5-0ubuntu3~18.04.1) bionic; urgency=medium
 
   * Backport version 1.5.5-0ubuntu3 from Impish (LP: #1938908).
     - d/control: do not b-d on libbtrfs-dev, it is not available in Bionic.
