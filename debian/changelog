@@ -1,8 +1,15 @@
-containerd (1.5.5-0ubuntu2~21.04.1) hirsute; urgency=medium
+containerd (1.5.5-0ubuntu3) impish; urgency=medium
 
-  * Backport version 1.5.5-0ubuntu2 from Impish (LP: #1938908).
+  * SECURITY UPDATE: insufficiently restricted directory permissions
+    - debian/patches/1.5-reduce-directory-permissions.patch: reduce
+      permissions for bundle dir in runtime/v1/linux/bundle.go,
+      runtime/v1/linux/bundle_test.go, runtime/v2/bundle.go,
+      runtime/v2/bundle_default.go, runtime/v2/bundle_linux.go,
+      runtime/v2/bundle_linux_test.go, runtime/v2/bundle_test.go,
+      snapshots/btrfs/btrfs.go.
+    - CVE-2021-41103
 
- -- Lucas Kanashiro <kanashiro@ubuntu.com>  Tue, 21 Sep 2021 17:28:52 -0300
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 06 Oct 2021 09:13:26 -0400
 
 containerd (1.5.5-0ubuntu2) impish; urgency=medium
 
