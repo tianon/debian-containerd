@@ -1,3 +1,4 @@
 skip-tests-with-privilege.patch
 preserve-debug-info.patch
 seccomp-support-clone3-syscall.patch
+1.5-reduce-directory-permissions.patch
