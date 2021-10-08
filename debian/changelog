@@ -1,3 +1,13 @@
+containerd (1.5.5-0ubuntu3~18.04.1) UNRELEASED; urgency=medium
+
+  * Backport version 1.5.5-0ubuntu3 from Impish (LP: #1938908).
+    - d/control: do not b-d on libbtrfs-dev, it is not available in Bionic.
+    - d/control: b-d on golang-1.13-go instead of golang-go.
+    - d/rules: set GO111MODULE to off, to avoid Internet connection during the
+      build.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 08 Oct 2021 11:55:12 -0300
+
 containerd (1.5.5-0ubuntu3) impish; urgency=medium
 
   * SECURITY UPDATE: insufficiently restricted directory permissions
