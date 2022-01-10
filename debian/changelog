@@ -1,6 +1,7 @@
 containerd (1.5.9-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * Remove patches applied by upstream.
 
  -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 10 Jan 2022 16:27:26 -0300
 
