@@ -1,21 +1,9 @@
-containerd (1.5.5-0ubuntu3~18.04.2) bionic-security; urgency=medium
+containerd (1.5.9-0ubuntu1) jammy; urgency=medium
 
-  * SECURITY UPDATE: Insecure handling of image volumes
-    - debian/patches/CVE-2022-23648.patch: Use fs.RootPath when mounting
-    volumes.
-    - CVE-2022-23648
+  * New upstream release (LP: #1946851, #1955413).
+  * Remove patches applied by upstream.
 
- -- Paulo Flabiano Smorigo <pfsmorigo@canonical.com>  Fri, 25 Feb 2022 20:16:34 +0000
-
-containerd (1.5.5-0ubuntu3~18.04.1) bionic; urgency=medium
-
-  * Backport version 1.5.5-0ubuntu3 from Impish (LP: #1938908).
-    - d/control: do not b-d on libbtrfs-dev, it is not available in Bionic.
-    - d/control: b-d on golang-1.13-go instead of golang-go.
-    - d/rules: set GO111MODULE to off, to avoid Internet connection during the
-      build.
-
- -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 08 Oct 2021 11:55:12 -0300
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 10 Jan 2022 16:27:26 -0300
 
 containerd (1.5.5-0ubuntu3) impish; urgency=medium
 
