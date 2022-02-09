@@ -1,3 +1,13 @@
+containerd (1.5.9-0ubuntu1~18.04.1) UNRELEASED; urgency=medium
+
+  * Backport version 1.5.9-0ubuntu1 from Jammy (LP: #1955413, #1960449).
+    - d/control: do not b-d on libbtrfs-dev, it is not available in Bionic.
+    - d/control: b-d on golang-1.13-go instead of golang-go.
+    - d/rules: set GO111MODULE to off, to avoid Internet connection during the
+      build.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 09 Feb 2022 17:38:58 -0300
+
 containerd (1.5.9-0ubuntu1) jammy; urgency=medium
 
   * New upstream release (LP: #1946851, #1955413).
