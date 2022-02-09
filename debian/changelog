@@ -1,4 +1,4 @@
-containerd (1.5.9-0ubuntu1~21.10.1) UNRELEASED; urgency=medium
+containerd (1.5.9-0ubuntu1~21.10.1) impish; urgency=medium
 
   * Backport version 1.5.9-0ubuntu1 from Jammy (LP: #1955413, #1960449).
 
