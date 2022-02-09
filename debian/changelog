@@ -1,10 +1,9 @@
-containerd (1.5.5-0ubuntu3~20.04.1) focal; urgency=medium
+containerd (1.5.9-0ubuntu1) jammy; urgency=medium
 
-  * Backport version 1.5.5-0ubuntu3 from Impish (LP: #1938908).
-    - d/rules: set GO111MODULE to off, this avoid Internet connection during
-      the build.
+  * New upstream release (LP: #1946851, #1955413).
+  * Remove patches applied by upstream.
 
- -- Lucas Kanashiro <kanashiro@ubuntu.com>  Fri, 08 Oct 2021 11:45:38 -0300
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 10 Jan 2022 16:27:26 -0300
 
 containerd (1.5.5-0ubuntu3) impish; urgency=medium
 
