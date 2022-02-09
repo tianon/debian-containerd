@@ -1,3 +1,9 @@
+containerd (1.5.9-0ubuntu1~21.10.1) UNRELEASED; urgency=medium
+
+  * Backport version 1.5.9-0ubuntu1 from Jammy (LP: #1955413, #1960449).
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 09 Feb 2022 17:15:51 -0300
+
 containerd (1.5.9-0ubuntu1) jammy; urgency=medium
 
   * New upstream release (LP: #1946851, #1955413).
