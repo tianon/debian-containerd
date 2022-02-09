@@ -1,4 +1,4 @@
-containerd (1.5.9-0ubuntu1~20.04.1) UNRELEASED; urgency=medium
+containerd (1.5.9-0ubuntu1~20.04.1) focal; urgency=medium
 
   * Backport version 1.5.9-0ubuntu1 from Jammy (LP: #1955413, #1960449).
     - d/rules: set GO111MODULE to off.
