@@ -1,8 +1,14 @@
 containerd (1.6.4-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * Remove patches applied by upstream:
+    - d/p/build-with-go1.18.patch
+    - d/p/CVE-2022-23648.patch
+  * d/p/build-gen-manpages-instead-of-go-run.patch: add upstream patch to
+    avoid calling go run to build manpages.
+  * d/rules: fix DESTDIR and PREFIX variables.
 
- -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 11 May 2022 16:45:32 -0300
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 11 May 2022 17:48:49 -0300
 
 containerd (1.5.9-0ubuntu3) jammy; urgency=medium
 
