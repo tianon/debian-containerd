@@ -1,3 +1,12 @@
+containerd (1.5.9-0ubuntu3) jammy; urgency=medium
+
+  * d/p/build-with-go1.18.patch: fix FTBFS with Go 1.18 (LP: #1965157).
+    In Go 1.17 the module graph has been changed to enable pruning and lazy
+    loading, some changes to go.{mod,sum} files are needed. We were delaying
+    the fix of this issue but now is the time.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 23 Mar 2022 19:41:42 +0000
+
 containerd (1.5.9-0ubuntu2) jammy; urgency=medium
 
   * SECURITY UPDATE: Insecure handling of image volumes
