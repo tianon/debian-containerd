@@ -1,3 +1,12 @@
+containerd (1.5.5-0ubuntu3~18.04.2) bionic-security; urgency=medium
+
+  * SECURITY UPDATE: Insecure handling of image volumes
+    - debian/patches/CVE-2022-23648.patch: Use fs.RootPath when mounting
+    volumes.
+    - CVE-2022-23648
+
+ -- Paulo Flabiano Smorigo <pfsmorigo@canonical.com>  Fri, 25 Feb 2022 20:16:34 +0000
+
 containerd (1.5.5-0ubuntu3~18.04.1) bionic; urgency=medium
 
   * Backport version 1.5.5-0ubuntu3 from Impish (LP: #1938908).
