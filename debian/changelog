@@ -1,3 +1,9 @@
+containerd (1.6.10-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release (LP: #1993392).
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 16 Nov 2022 12:04:51 -0300
+
 containerd (1.6.4-0ubuntu1) kinetic; urgency=medium
 
   * New upstream release.
