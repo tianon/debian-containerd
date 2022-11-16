@@ -1,4 +1,4 @@
-containerd (1.6.10-0ubuntu1) UNRELEASED; urgency=medium
+containerd (1.6.10-0ubuntu1) lunar; urgency=medium
 
   * New upstream release (LP: #1993392).
 
