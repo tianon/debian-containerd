@@ -1,47 +1,45 @@
-containerd (1.5.9-0ubuntu1~20.04.6) focal-security; urgency=medium
+containerd (1.6.12-0ubuntu1) lunar; urgency=medium
 
-  * SECURITY UPDATE: Memory exhaustion through Exec
-    - debian/patches/CVE-2022-23471.patch: Prevent goroutine leak in Exec
-      in pkg/cri/streaming/remotecommand/httpstream.go.
-    - CVE-2022-23471
-  * SECURITY UPDATE: Privilege escalation by inheritable file capabilities.
-    - debian/patches/CVE-2022-24769.patch: Unassign the Inheritable
-      capability in oci/spec.go and oci/spec_opts.go.
-    - CVE-2022-24769
-  * SECURITY UPDATE: Improper access to images due to imgcrypt.
-    - debian/patches/CVE-2022-24778.patch: perform proper
-      authentication by adding platforms in 
-      vendor/github.com/containerd/imgcrypt/images/
-      encryption/encryption.go.
-    - CVE-2022-24778
-  * SECURITY UPDATE: Memory exhaustion through ExecSync.
-    - debian/patches/CVE-2022-31030.patch: limit the response size
-      of ExecSync in pkg/cri/server/container_execsync.go.
-    - CVE-2022-31030
+  * New upstream release.
+    - Fixes CVE-2022-23471.
 
- -- David Fernandez Gonzalez <david.fernandezgonzalez@canonical.com>  Mon, 12 Dec 2022 10:14:54 +0100
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 12 Dec 2022 11:55:18 -0300
 
-containerd (1.5.9-0ubuntu1~20.04.5) focal-security; urgency=medium
+containerd (1.6.10-0ubuntu1) lunar; urgency=medium
 
-  * No-change rebuild due to golang-1.13 update
+  * New upstream release (LP: #1993392).
 
- -- David Fernandez Gonzalez <david.fernandezgonzalez@canonical.com>  Tue, 11 Oct 2022 02:43:53 +0200
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 16 Nov 2022 12:04:51 -0300
 
-containerd (1.5.9-0ubuntu1~20.04.4) focal-security; urgency=medium
+containerd (1.6.4-0ubuntu1) kinetic; urgency=medium
+
+  * New upstream release.
+  * Remove patches applied by upstream:
+    - d/p/build-with-go1.18.patch
+    - d/p/CVE-2022-23648.patch
+  * d/p/build-gen-manpages-instead-of-go-run.patch: add upstream patch to
+    avoid calling go run to build manpages.
+  * d/rules: fix DESTDIR and PREFIX variables.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 11 May 2022 17:48:49 -0300
+
+containerd (1.5.9-0ubuntu3) jammy; urgency=medium
+
+  * d/p/build-with-go1.18.patch: fix FTBFS with Go 1.18 (LP: #1965157).
+    In Go 1.17 the module graph has been changed to enable pruning and lazy
+    loading, some changes to go.{mod,sum} files are needed. We were delaying
+    the fix of this issue but now is the time.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 23 Mar 2022 19:41:42 +0000
+
+containerd (1.5.9-0ubuntu2) jammy; urgency=medium
 
   * SECURITY UPDATE: Insecure handling of image volumes
     - debian/patches/CVE-2022-23648.patch: Use fs.RootPath when mounting
-    volumes. (LP: #1973054)
+    volumes.
     - CVE-2022-23648
 
- -- Paulo Flabiano Smorigo <pfsmorigo@canonical.com>  Thu, 12 May 2022 13:42:43 +0000
-
-containerd (1.5.9-0ubuntu1~20.04.1) focal; urgency=medium
-
-  * Backport version 1.5.9-0ubuntu1 from Jammy (LP: #1955413, #1960449).
-    - d/rules: set GO111MODULE to off.
-
- -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 09 Feb 2022 17:23:51 -0300
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Thu, 03 Mar 2022 13:17:25 -0300
 
 containerd (1.5.9-0ubuntu1) jammy; urgency=medium
 
