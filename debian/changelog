@@ -1,3 +1,15 @@
+containerd (1.6.12-0ubuntu1~18.04.1) UNRELEASED; urgency=medium
+
+  * Backport version 1.6.12-0ubuntu1 from Lunar (LP: #1996909, #1996534).
+    - d/rules: set GO111MODULE to off.
+    - d/control: b-d on golang-1.18-go instead of golang-go.
+    - d/rules: build with Golang 1.18.
+    - d/control: do not b-d on libbtrfs-dev, it is not available in Bionic.
+    - d/p/do-not-rebuild-manpage-during-installation.patch: avoid running go
+      script during installation.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Thu, 17 Nov 2022 15:43:46 -0300
+
 containerd (1.6.12-0ubuntu1) lunar; urgency=medium
 
   * New upstream release.
