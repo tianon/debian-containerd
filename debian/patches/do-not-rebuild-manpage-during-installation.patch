@@ -1,0 +1,20 @@
+Description: do not force manpages rebuild during installation
+ The manpages are built during dh_auto_build, no need to do it again during
+ dh_install. Moreover, the go script to build manpages is breaking during
+ installation time because GOPATH is not set with the vendor code to pull in
+ the dependencies. Let's just install the files during dh_install.
+Author: Lucas Kanashiro <kanashiro@ubuntu.com>
+Forward: not-needed
+Last-Update: 2022-11-17
+
+--- a/Makefile
++++ b/Makefile
+@@ -289,7 +289,7 @@
+ gzip -c $(1) >$(DESTDIR)$(MANDIR)/man$(2)/$(3).gz;
+ endef
+ 
+-install-man: man
++install-man:
+ 	@echo "$(WHALE) $@"
+ 	$(foreach manpage,$(addprefix man/,$(MANPAGES)), $(call installmanpage,$(manpage),$(subst .,,$(suffix $(manpage))),$(notdir $(manpage))))
+ 

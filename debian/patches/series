@@ -1,3 +1,4 @@
 skip-tests-with-privilege.patch
 preserve-debug-info.patch
 build-gen-manpanges-instead-of-go-run.patch
+do-not-rebuild-manpage-during-installation.patch
