@@ -17,12 +17,8 @@ TAGS += no_btrfs
 SKIP += github.com/containerd/containerd/snapshots/btrfs
 endif
 
-# build explicitly against Go 1.13 (for now):
-#   https://github.com/containerd/containerd/issues/4509
-#   https://github.com/containerd/containerd/pull/4050
-#   https://github.com/golang/go/issues/37942
-# (containerd 1.4+ and Go 1.15+ can go back to "golang-go")
-export PATH := /usr/lib/go-1.13/bin:$(PATH)
+# build explicitly against Go 1.18
+export PATH := /usr/lib/go-1.18/bin:$(PATH)
 
 override_dh_gencontrol:
 	# use "dh_golang" to generate "misc:Built-Using" (via "go list")
