@@ -1,4 +1,4 @@
-containerd (1.6.12-0ubuntu1) UNRELEASED; urgency=medium
+containerd (1.6.12-0ubuntu1) lunar; urgency=medium
 
   * New upstream release.
     - Fixes CVE-2022-23471.
