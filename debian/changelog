@@ -1,3 +1,9 @@
+containerd (1.5.9-0ubuntu1~20.04.5) focal-security; urgency=medium
+
+  * No-change rebuild due to golang-1.13 update
+
+ -- David Fernandez Gonzalez <david.fernandezgonzalez@canonical.com>  Tue, 11 Oct 2022 02:43:53 +0200
+
 containerd (1.5.9-0ubuntu1~20.04.4) focal-security; urgency=medium
 
   * SECURITY UPDATE: Insecure handling of image volumes
