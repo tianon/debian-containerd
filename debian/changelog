@@ -1,3 +1,26 @@
+containerd (1.5.9-0ubuntu1~18.04.2) bionic-security; urgency=medium
+
+  * SECURITY UPDATE: Memory exhaustion through Exec
+    - debian/patches/CVE-2022-23471.patch: Prevent goroutine leak in Exec
+      in pkg/cri/streaming/remotecommand/httpstream.go.
+    - CVE-2022-23471
+  * SECURITY UPDATE: Privilege escalation by inheritable file capabilities.
+    - debian/patches/CVE-2022-24769.patch: Unassign the Inheritable
+      capability in oci/spec.go and oci/spec_opts.go.
+    - CVE-2022-24769
+  * SECURITY UPDATE: Improper access to images due to imgcrypt.
+    - debian/patches/CVE-2022-24778.patch: perform proper
+      authentication by adding platforms in 
+      vendor/github.com/containerd/imgcrypt/images/
+      encryption/encryption.go.
+    - CVE-2022-24778
+  * SECURITY UPDATE: Memory exhaustion through ExecSync.
+    - debian/patches/CVE-2022-31030.patch: limit the response size
+      of ExecSync in pkg/cri/server/container_execsync.go.
+    - CVE-2022-31030
+
+ -- David Fernandez Gonzalez <david.fernandezgonzalez@canonical.com>  Mon, 12 Dec 2022 16:33:42 +0100
+
 containerd (1.5.9-0ubuntu1~18.04.1) bionic; urgency=medium
 
   * Backport version 1.5.9-0ubuntu1 from Jammy (LP: #1955413, #1960449).
