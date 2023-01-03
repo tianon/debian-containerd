@@ -1,4 +1,4 @@
-containerd (1.6.12-0ubuntu1~22.04.1) UNRELEASED; urgency=medium
+containerd (1.6.12-0ubuntu1~22.04.1) jammy; urgency=medium
 
   * Backport version 1.6.12-0ubuntu1 from Lunar (LP: #1996909, #1996534).
 
