@@ -1,3 +1,16 @@
+containerd (1.6.12-0ubuntu1) lunar; urgency=medium
+
+  * New upstream release.
+    - Fixes CVE-2022-23471.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 12 Dec 2022 11:55:18 -0300
+
+containerd (1.6.10-0ubuntu1) lunar; urgency=medium
+
+  * New upstream release (LP: #1993392).
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Wed, 16 Nov 2022 12:04:51 -0300
+
 containerd (1.6.4-0ubuntu1.1) kinetic-security; urgency=medium
 
   * SECURITY UPDATE: Memory exhaustion through Exec
