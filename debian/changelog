@@ -1,3 +1,10 @@
+containerd (1.6.12-0ubuntu3) UNRELEASED; urgency=medium
+
+  * d/p/skip-test-setting-OOM-score-to-negative-number-in-unprivileged-mode.patch:
+    fix a FTBFS in Ubuntu builders only.
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 10 Apr 2023 15:42:57 -0300
+
 containerd (1.6.12-0ubuntu2) lunar; urgency=medium
 
   * Add unvendored dependencies to golang-github-containerd-containerd-dev.
