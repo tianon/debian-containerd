@@ -1,3 +1,10 @@
+containerd (1.6.12-0ubuntu2) lunar; urgency=medium
+
+  * Add unvendored dependencies to golang-github-containerd-containerd-dev.
+    Ideally containerd should be unvendored like in Debian. (LP: #1998847)
+
+ -- Benjamin Drung <bdrung@ubuntu.com>  Tue, 13 Dec 2022 11:52:06 +0100
+
 containerd (1.6.12-0ubuntu1) lunar; urgency=medium
 
   * New upstream release.

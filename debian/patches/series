@@ -1,3 +1,5 @@
 skip-tests-with-privilege.patch
 preserve-debug-info.patch
 build-gen-manpanges-instead-of-go-run.patch
+0001-disable-windows-support-in-ctr-metric.patch
+0005-Revert-Use-insecure.NewCredentials-instead-of-grpc.W.patch
