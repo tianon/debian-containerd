@@ -1,4 +1,4 @@
-containerd (1.6.12-0ubuntu3) UNRELEASED; urgency=medium
+containerd (1.6.12-0ubuntu3) lunar; urgency=medium
 
   * d/p/skip-test-setting-OOM-score-to-negative-number-in-unprivileged-mode.patch:
     fix a FTBFS in Ubuntu builders only.
