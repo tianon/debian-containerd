@@ -1,6 +1,21 @@
 containerd (1.7.2-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release (LP: #2018065).
+    - Update patches in d/patches:
+      + skip-tests-with-privilege.patch: refresh.
+      + preserve-debug-info.patch: refresh.
+      + build-gen-manpanges-instead-of-go-run.patch: removed, applied by
+        upstream.
+        [Applied in upstream version 1.7.0]
+      + 0001-disable-windows-support-in-ctr-metric.patch: refresh.
+      + 0005-Revert-Use-insecure.NewCredentials-instead-of-grpc.W.patch:
+        refresh.
+    - d/containerd.docs: install *.png instead of unexistent *.pdf.
+  * Bump debhelper compatibility level to 12. Now, that Bionic reached EOSS we
+     can update it to level 12.
+     - d/control: build depend on debhelper-compat (= 12) instead of debhelper.
+     - d/compat: removed, not needed anymore.
+     - d/rules: do not run dh_dwz, it does not like golang fat binaries.
 
  -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 12 Jun 2023 18:27:48 -0300
 
