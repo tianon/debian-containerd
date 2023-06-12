@@ -1,3 +1,9 @@
+containerd (1.7.2-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release (LP: #2018065).
+
+ -- Lucas Kanashiro <kanashiro@ubuntu.com>  Mon, 12 Jun 2023 18:27:48 -0300
+
 containerd (1.6.12-0ubuntu3) lunar; urgency=medium
 
   * d/p/skip-test-setting-OOM-score-to-negative-number-in-unprivileged-mode.patch:
