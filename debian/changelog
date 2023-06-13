@@ -1,4 +1,4 @@
-containerd (1.7.2-0ubuntu2) UNRELEASED; urgency=medium
+containerd (1.7.2-0ubuntu2) mantic; urgency=medium
 
   * d/p/skip-test-failing-in-riscv64.patch: it does not seem to be a real
     regression, so skipping it for now.
