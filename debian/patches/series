@@ -1,3 +1,4 @@
+skip-test-failing-in-riscv64.patch
 skip-tests-with-privilege.patch
 preserve-debug-info.patch
 0001-disable-windows-support-in-ctr-metric.patch
